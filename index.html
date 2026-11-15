@@ -243,7 +243,7 @@ const rk={};items.forEach(it=>{if(it.k==="up"&&it.pos){const key=it.gu+"/"+it.ld
 const state={gu:"전체",mode:"up",sel:null,route:false};
 const svg=document.getElementById("map"),wrap=document.getElementById("wrap");
 const B=GEO.box,PAD=14,VB0=[B[0]-PAD,B[1]-PAD,B[2]-B[0]+2*PAD,B[3]-B[1]+2*PAD];
-let vb=VB0.slice();
+let vb=VB0.slice(),vbDirty=false; // vbDirty: 사용자가 확대·이동해서 화면 맞춤이 아닌 상태
 const gShapes=el("g",{},svg),gDL=el("g",{},svg),gGL=el("g",{},svg),gRoute=el("g",{},svg),gPts=el("g",{},svg),gNum=el("g",{},svg);
 GEO.dongs.forEach(d=>{d.el=el("path",{d:d.d,class:"dongshape "+GCLS[d.g]},gShapes);d.lab=el("text",{x:d.c[0],y:d.c[1],class:"dlabel"},gDL);d.lab.textContent=d.n});
 const guLab={};GUS.forEach(g=>{const ds=GEO.dongs.filter(d=>d.g===g);const A=ds.reduce((s,d)=>s+d.a,0);const x=ds.reduce((s,d)=>s+d.c[0]*d.a,0)/A,y=ds.reduce((s,d)=>s+d.c[1]*d.a,0)/A;guLab[g]=el("text",{x,y,class:"glabel"},gGL);guLab[g].textContent=g});
@@ -261,14 +261,14 @@ function refresh(){GEO.dongs.forEach(d=>d.el.classList.toggle("dimgu",state.gu!=
   items.forEach(it=>{if(it.g){it.g.style.display=visible(it)?"":"none";it.g.classList.toggle("sel",state.sel===it);it.g.classList.toggle("unv",it.k==="up"&&it.vs==="bad")}});
   planRoute();drawBar();drawSide();applyView()}
 function fit(gu){let b=VB0;if(gu&&gu!=="전체"){const ds=GEO.dongs.filter(d=>d.g===gu);let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;ds.forEach(d=>{const bb=d.el.getBBox();x0=Math.min(x0,bb.x);y0=Math.min(y0,bb.y);x1=Math.max(x1,bb.x+bb.width);y1=Math.max(y1,bb.y+bb.height)});b=[x0-PAD,y0-PAD,x1-x0+2*PAD,y1-y0+2*PAD]}
-  const ar=svg.clientWidth/svg.clientHeight||1;let[x,y,w,hh]=b;if(w/hh<ar){const nw=hh*ar;x-=(nw-w)/2;w=nw}else{const nh=w/ar;y-=(nh-hh)/2;hh=nh}vb=[x,y,w,hh];applyView()}
-function zoomAt(f,cx,cy){const w=Math.min(Math.max(vb[2]*f,VB0[2]/40),VB0[2]*2.2),r=w/vb[2];vb=[cx-(cx-vb[0])*r,cy-(cy-vb[1])*r,w,vb[3]*r];applyView()}
+  const ar=svg.clientWidth/svg.clientHeight||1;let[x,y,w,hh]=b;if(w/hh<ar){const nw=hh*ar;x-=(nw-w)/2;w=nw}else{const nh=w/ar;y-=(nh-hh)/2;hh=nh}vb=[x,y,w,hh];vbDirty=false;applyView()}
+function zoomAt(f,cx,cy){const w=Math.min(Math.max(vb[2]*f,VB0[2]/40),VB0[2]*2.2),r=w/vb[2];vb=[cx-(cx-vb[0])*r,cy-(cy-vb[1])*r,w,vb[3]*r];vbDirty=true;applyView()}
 function toMap(e){const r=svg.getBoundingClientRect();return[vb[0]+(e.clientX-r.left)/r.width*vb[2],vb[1]+(e.clientY-r.top)/r.height*vb[3]]}
 svg.addEventListener("wheel",e=>{e.preventDefault();const p=toMap(e);zoomAt(e.deltaY>0?1.2:1/1.2,p[0],p[1])},{passive:false});
 const ptrs=new Map();let pinch=0;
 svg.addEventListener("pointerdown",e=>{ptrs.set(e.pointerId,[e.clientX,e.clientY]);svg.classList.add("drag")});
 window.addEventListener("pointermove",e=>{if(!ptrs.has(e.pointerId))return;const prev=ptrs.get(e.pointerId);const r=svg.getBoundingClientRect();
-  if(ptrs.size===1){vb[0]-=(e.clientX-prev[0])/r.width*vb[2];vb[1]-=(e.clientY-prev[1])/r.height*vb[3];ptrs.set(e.pointerId,[e.clientX,e.clientY]);applyView()}
+  if(ptrs.size===1){vb[0]-=(e.clientX-prev[0])/r.width*vb[2];vb[1]-=(e.clientY-prev[1])/r.height*vb[3];vbDirty=true;ptrs.set(e.pointerId,[e.clientX,e.clientY]);applyView()}
   else{ptrs.set(e.pointerId,[e.clientX,e.clientY]);const a=[...ptrs.values()];const d=Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1]);
     if(pinch){const mx=(a[0][0]+a[1][0])/2,my=(a[0][1]+a[1][1])/2;const p=toMap({clientX:mx,clientY:my});zoomAt(pinch/d,p[0],p[1])}pinch=d}});
 const up=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinch=0;if(!ptrs.size)svg.classList.remove("drag")};
@@ -285,7 +285,8 @@ const splitClamp=v=>Math.min(SPLIT_MAX,Math.max(SPLIT_MIN,v));
 function syncSplitBtn(){const b=document.getElementById("splitBig");if(!b)return;const big=splitR<=45;const t=big?"지도 크게":"목록 크게";
   if(b.textContent!==t)b.textContent=t;b.setAttribute("aria-pressed",big?"true":"false");
   b.title=big?"지도와 목록을 기본 비율로":"목록을 크게 보기"}
-function refitSplit(){const ar=svg.clientWidth/svg.clientHeight;if(!(ar>0)||!vb[2]||!vb[3])return;
+function refitSplit(){const ar=svg.clientWidth/svg.clientHeight;if(!(ar>0))return;
+  if(!vbDirty){fit(state.gu);return} // 확대해 두지 않았으면 화면 맞춤을 다시 계산한다
   const cx=vb[0]+vb[2]/2,cy=vb[1]+vb[3]/2,hh=vb[2]/ar;vb=[cx-vb[2]/2,cy-hh/2,vb[2],hh];applyView()}
 function splitApply(r,save,refit){splitR=splitClamp(+r||SPLIT_DEF);
   mainEl.style.setProperty("--map-r",splitR.toFixed(2));splitEl.setAttribute("aria-valuenow",String(Math.round(splitR)));syncSplitBtn();
@@ -318,7 +319,7 @@ splitEl.addEventListener("keydown",e=>{const k=e.key;
   else if(k==="End"){e.preventDefault();splitApply(SPLIT_MAX,true,true)}
   else if(k==="Enter"||k===" "){e.preventDefault();splitToggle()}});
 document.getElementById("splitBig").addEventListener("click",e=>{e.stopPropagation();splitToggle()});
-function select(it,center){state.sel=state.sel===it?null:it;if(state.sel&&center&&it.pos){const w=Math.min(vb[2],VB0[2]/5),r=w/vb[2];vb=[it.pos[0]-w/2,it.pos[1]-vb[3]*r/2,w,vb[3]*r]}refresh();
+function select(it,center){state.sel=state.sel===it?null:it;if(state.sel&&center&&it.pos){const w=Math.min(vb[2],VB0[2]/5),r=w/vb[2];vb=[it.pos[0]-w/2,it.pos[1]-vb[3]*r/2,w,vb[3]*r];vbDirty=true}refresh();
   if(state.sel){const c=document.querySelector(".card");if(c)c.scrollIntoView({block:"nearest"})}}
 function chip(p,label,n,on,fn){const b=h("button","chip",p);b.type="button";b.setAttribute("aria-pressed",on);b.append(label);if(n!=null)h("span","n",b,n);b.onclick=fn;return b}
 function drawBar(){const bar=document.getElementById("bar");bar.textContent="";const pool=items.filter(it=>state.mode==="all"||it.k==="up");
