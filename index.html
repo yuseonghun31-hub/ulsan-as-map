@@ -331,7 +331,7 @@ function applyView(){svg.setAttribute("viewBox",vb.join(" "));const u=vb[2]/svg.
   GEO.dongs.forEach(d=>{const px=Math.sqrt(d.a)/u;d.lab.setAttribute("font-size",10*u);d.lab.setAttribute("y",d.c[1]-9*u);d.lab.style.display=px>46&&k>0.7?"":"none"});
   REGION.areas.forEach(a=>{a.lab.setAttribute("font-size",9.5*u);a.lab.style.display=Math.sqrt(a.a)/u>26?"":"none"});
   GUS.forEach(g=>{guLab[g].setAttribute("font-size",26*u);guLab[g].style.display=k>0.45?"":"none"});
-  ULAB.setAttribute("font-size",12*u);ULAB.style.display=k<0.45?"":"none";
+  ULAB.setAttribute("x",(B[0]+B[2])/2);ULAB.setAttribute("y",B[3]+12*u);ULAB.setAttribute("font-size",12*u);ULAB.style.display=k<0.45?"":"none";
   items.forEach(it=>{if(!it.g)return;const up=it.k==="up";it.c.setAttribute("r",(up?5.5:3.6)*u);
     it.t.setAttribute("font-size",(up?12:10.5)*u);it.t.setAttribute("dx",(up?8:6)*u);it.t.setAttribute("dy",(3.5+(up?it.rank*13:0))*u);it.t.setAttribute("stroke-width",3*u);
     it.t.style.display=(state.sel===it||((up||k>=3)&&k>=0.55))?"":"none"});
