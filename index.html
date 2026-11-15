@@ -64,6 +64,7 @@ main{flex:1;min-height:0;display:flex;flex-direction:column;--map-r:55}
 .splitter .sbtn:active,.splitter .sbtn[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
 .mapwrap.tight .zoom{gap:4px;right:8px;bottom:8px}
 .mapwrap.tight .zoom button{width:30px;height:30px;font-size:16px;border-radius:8px}
+.mapwrap.tight .zoom button.zf{font-size:10px}
 .mapwrap.tight .legend{left:8px;bottom:8px;padding:3px 8px;font-size:11px;gap:9px}
 body.splitting{user-select:none;-webkit-user-select:none}
 svg#map{width:100%;height:100%;display:block;cursor:grab}
@@ -87,6 +88,7 @@ svg#map.drag{cursor:grabbing}
 .asof.warn{color:var(--warn);cursor:pointer;text-decoration:underline dotted}
 .zoom{position:absolute;right:12px;bottom:12px;display:flex;flex-direction:column;gap:6px}
 .zoom button{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-size:20px;line-height:1;cursor:pointer}
+.zoom button.zf{font-size:13px;white-space:nowrap}
 .legend{position:absolute;left:12px;bottom:12px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:12px;color:var(--muted);display:flex;gap:12px;align-items:center}
 .legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:-1px}
 .side{flex:calc(100 - var(--map-r)) 1 0%;min-height:0;overflow:auto;background:var(--panel);border-top:0;padding:10px 16px 20px}
@@ -201,7 +203,7 @@ button.mini:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   <div class="mapwrap" id="wrap">
     <svg id="map" role="img" aria-label="울산 남구·중구·북구·동구 동 경계 지도와 방문 위치"></svg>
     <div class="legend"><span><i style="background:var(--accent)"></i>예정</span><span><i style="background:var(--done)"></i>완료</span></div>
-    <div class="zoom"><button id="zin" aria-label="확대">+</button><button id="zout" aria-label="축소">−</button><button id="zfit" aria-label="전체 보기" style="font-size:13px">전체</button></div>
+    <div class="zoom"><button id="zin" aria-label="확대">+</button><button id="zout" aria-label="축소">−</button><button id="zfit" class="zf" aria-label="전체 보기">전체</button></div>
   </div>
   <div class="splitter" id="splitter" role="separator" aria-orientation="horizontal" aria-controls="wrap" aria-label="지도와 목록 높이 조절 — 끌어서 옮기고, 두 번 누르면 기본 비율" aria-valuemin="18" aria-valuemax="78" aria-valuenow="55" tabindex="0"><span class="sgrip" aria-hidden="true"></span><button class="sbtn" id="splitBig" type="button" aria-pressed="false" title="목록을 크게 보기">목록 크게</button></div>
   <div class="side" id="side"></div>
