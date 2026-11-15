@@ -8,7 +8,9 @@
 </style></head>
 <body>
 <iframe id="f" src="index.html"></iframe>
-<aside><pre id="out">준비 중…</pre></aside>
+<aside><pre id="out">준비 중…</pre>
+  <p style="margin:10px 0 0"><button id="dtap">두 번 탭 흉내</button> <button id="simdrag">터치 끌기 흉내(+80px)</button></p>
+</aside>
 <script>
 const f=document.getElementById('f'), out=document.getElementById('out');
 function read(){
@@ -41,5 +43,18 @@ f.addEventListener('load',()=>{
   setTimeout(read,150);
 });
 setInterval(read,400);
+function ev(sp,type,id,y,buttons){const r=sp.getBoundingClientRect();
+  return sp.dispatchEvent(new PointerEvent(type,{pointerId:id,pointerType:"touch",isPrimary:true,bubbles:true,cancelable:true,button:0,buttons:buttons,clientX:r.left+r.width/2,clientY:y}));}
+document.getElementById("dtap").addEventListener("click",()=>{
+  const sp=f.contentDocument.getElementById("splitter"), y=sp.getBoundingClientRect().top+13;
+  ev(sp,"pointerdown",31,y,1);ev(sp,"pointerup",31,y,0);
+  setTimeout(()=>{ev(sp,"pointerdown",31,y,1);ev(sp,"pointerup",31,y,0);read()},130);
+});
+document.getElementById("simdrag").addEventListener("click",()=>{
+  const sp=f.contentDocument.getElementById("splitter"), y0=sp.getBoundingClientRect().top+13;
+  ev(sp,"pointerdown",32,y0,1);
+  [20,40,60,80].forEach(d=>ev(sp,"pointermove",32,y0+d,1));
+  ev(sp,"pointerup",32,y0+80,0);read();
+});
 </script>
 </body></html>
