@@ -21,7 +21,7 @@
 :root{
   --bg:#f3f5f4; --panel:#ffffff; --ink:#18211f; --muted:#62706c; --line:#d5dcd9;
   --accent:#0b6b5c; --accent-ink:#ffffff; --done:#8b9793; --warn:#b4530a;
-  --nam:#dcebe2; --jung:#e9e3d2; --buk:#dbe5ee; --dong:#eadfe4; --edge:#ffffff; --gu-ink:#3c4b47;
+  --nam:#cfe8d9; --jung:#efe6c7; --buk:#d2e2f1; --dong:#f0d9e1; --edge:#ffffff; --gu-ink:#2f3d39;
   --fillop:.52; --jn:#5b7186; --jnl:#8296ab; --bs:#6f6a8a; --bsl:#8f89a8; --uj:#63796d; --ujl:#849a8e;
   --font-display:"Do Hyeon","IBM Plex Sans KR",system-ui,sans-serif;
   --font-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
@@ -30,16 +30,16 @@
   :root:not([data-theme="light"]){
     --bg:#111615; --panel:#1a2120; --ink:#e7eeeb; --muted:#96a39f; --line:#2e3a37;
     --accent:#4fd1b5; --accent-ink:#06211c; --done:#6f7c78; --warn:#f0a35a;
-    --nam:#1f3229; --jung:#33301f; --buk:#1f2d3a; --dong:#33242b; --edge:#111615; --gu-ink:#b8c6c1;
-    --fillop:.62; --jn:#33506b; --jnl:#4e6d8a; --bs:#413a5e; --bsl:#635a83; --uj:#2c4a3d; --ujl:#43685a;
+    --nam:#2b5c47; --jung:#6b6031; --buk:#274c68; --dong:#5c3745; --edge:#0d1211; --gu-ink:#dfe9e5;
+    --fillop:.58; --jn:#33506b; --jnl:#4e6d8a; --bs:#413a5e; --bsl:#635a83; --uj:#2c4a3d; --ujl:#43685a;
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
   --bg:#111615; --panel:#1a2120; --ink:#e7eeeb; --muted:#96a39f; --line:#2e3a37;
   --accent:#4fd1b5; --accent-ink:#06211c; --done:#6f7c78; --warn:#f0a35a;
-  --nam:#1f3229; --jung:#33301f; --buk:#1f2d3a; --dong:#33242b; --edge:#111615; --gu-ink:#b8c6c1;
-  --fillop:.62; --jn:#33506b; --jnl:#4e6d8a; --bs:#413a5e; --bsl:#635a83; --uj:#2c4a3d; --ujl:#43685a;
+  --nam:#2b5c47; --jung:#6b6031; --buk:#274c68; --dong:#5c3745; --edge:#0d1211; --gu-ink:#dfe9e5;
+  --fillop:.58; --jn:#33506b; --jnl:#4e6d8a; --bs:#413a5e; --bsl:#635a83; --uj:#2c4a3d; --ujl:#43685a;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -318,11 +318,12 @@ function drawTiles(){
   }
   TILES.forEach((o,k)=>{if(!want.has(k)){if(o.img.parentNode)o.img.parentNode.removeChild(o.img);TILES.delete(k)}});
   TILES.forEach(o=>{
+    const ov=0.8*(vb[2]/(svg.clientWidth||1));            // 타일 사이 틈이 보이지 않게 살짝 겹친다
     const w=PXA*360/o.n,yt=PYA*ty2lat(o.ty/o.n)+PYB,yb=PYA*ty2lat((o.ty+1)/o.n)+PYB;
-    o.img.setAttribute("x",(PXA*tx2lng(o.tx/o.n)+PXB).toFixed(1));
-    o.img.setAttribute("y",yt.toFixed(1));
-    o.img.setAttribute("width",w.toFixed(1));
-    o.img.setAttribute("height",(yb-yt).toFixed(1))});
+    o.img.setAttribute("x",(PXA*tx2lng(o.tx/o.n)+PXB-ov).toFixed(1));
+    o.img.setAttribute("y",(yt-ov).toFixed(1));
+    o.img.setAttribute("width",(w+2*ov).toFixed(1));
+    o.img.setAttribute("height",(yb-yt+2*ov).toFixed(1))});
 }
 function applyView(){svg.setAttribute("viewBox",vb.join(" "));const u=vb[2]/svg.clientWidth||1;const k=VB0[2]/vb[2];
   GEO.dongs.forEach(d=>{const px=Math.sqrt(d.a)/u;d.lab.setAttribute("font-size",10*u);d.lab.setAttribute("y",d.c[1]-9*u);d.lab.style.display=px>46&&k>0.7?"":"none"});
