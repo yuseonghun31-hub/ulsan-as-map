@@ -22,7 +22,7 @@
   --bg:#f3f5f4; --panel:#ffffff; --ink:#18211f; --muted:#62706c; --line:#d5dcd9;
   --accent:#0b6b5c; --accent-ink:#ffffff; --done:#8b9793; --warn:#b4530a;
   --nam:#dcebe2; --jung:#e9e3d2; --buk:#dbe5ee; --dong:#eadfe4; --edge:#ffffff; --gu-ink:#3c4b47;
-  --fillop:.74; --jn:#5b7186; --jnl:#8296ab; --bs:#6f6a8a; --bsl:#8f89a8; --uj:#63796d; --ujl:#849a8e;
+  --fillop:.52; --jn:#5b7186; --jnl:#8296ab; --bs:#6f6a8a; --bsl:#8f89a8; --uj:#63796d; --ujl:#849a8e;
   --font-display:"Do Hyeon","IBM Plex Sans KR",system-ui,sans-serif;
   --font-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
 }
@@ -31,7 +31,7 @@
     --bg:#111615; --panel:#1a2120; --ink:#e7eeeb; --muted:#96a39f; --line:#2e3a37;
     --accent:#4fd1b5; --accent-ink:#06211c; --done:#6f7c78; --warn:#f0a35a;
     --nam:#1f3229; --jung:#33301f; --buk:#1f2d3a; --dong:#33242b; --edge:#111615; --gu-ink:#b8c6c1;
-    --fillop:.66; --jn:#33506b; --jnl:#4e6d8a; --bs:#413a5e; --bsl:#635a83; --uj:#2c4a3d; --ujl:#43685a;
+    --fillop:.62; --jn:#33506b; --jnl:#4e6d8a; --bs:#413a5e; --bsl:#635a83; --uj:#2c4a3d; --ujl:#43685a;
     color-scheme:dark;
   }
 }
@@ -39,7 +39,7 @@
   --bg:#111615; --panel:#1a2120; --ink:#e7eeeb; --muted:#96a39f; --line:#2e3a37;
   --accent:#4fd1b5; --accent-ink:#06211c; --done:#6f7c78; --warn:#f0a35a;
   --nam:#1f3229; --jung:#33301f; --buk:#1f2d3a; --dong:#33242b; --edge:#111615; --gu-ink:#b8c6c1;
-  --fillop:.66; --jn:#33506b; --jnl:#4e6d8a; --bs:#413a5e; --bsl:#635a83; --uj:#2c4a3d; --ujl:#43685a;
+  --fillop:.62; --jn:#33506b; --jnl:#4e6d8a; --bs:#413a5e; --bsl:#635a83; --uj:#2c4a3d; --ujl:#43685a;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -76,7 +76,7 @@ svg#map.drag{cursor:grabbing}
 .g-nam{fill:var(--nam)} .g-jung{fill:var(--jung)} .g-buk{fill:var(--buk)} .g-dong{fill:var(--dong)}
 /* 배경 타일 위: 경남·부산 시군구는 차분한 톤, 울산 4개 구는 채도·테두리로 도드라지게 */
 #map image.tile{pointer-events:none}
-.reg{stroke-width:1;vector-effect:non-scaling-stroke;fill-opacity:.3;stroke-opacity:.45}
+.reg{stroke-width:1;vector-effect:non-scaling-stroke;fill-opacity:.16;stroke-opacity:.5}
 .reg.gyeongnam{fill:var(--jn);stroke:var(--jnl)} .reg.busan{fill:var(--bs);stroke:var(--bsl)} .reg.ulju{fill:var(--uj);stroke:var(--ujl)}
 #map .donglayer{filter:drop-shadow(0 0 1.5px rgba(255,255,255,.5))}
 :root[data-theme="dark"] #map .donglayer{filter:drop-shadow(0 0 2px rgba(79,209,181,.45))}
@@ -684,6 +684,11 @@ if(navigator.serviceWorker&&location.protocol==="https:"){try{navigator.serviceW
 pinLoad();splitLoad();
 rebuild();fit("전체");
 if(PIN){hideGate();loadMap(true)}else{showGate("")}
+</script>
+<script>
+// QA 전용: ?theme=dark|light 로 테마를 강제한다 (배포 전 확인용, index.html 에는 없다)
+(function(){var m=/[?&]theme=(dark|light)/.exec(location.search);
+  if(m)document.documentElement.setAttribute("data-theme",m[1]);})();
 </script>
 </body>
 </html>
