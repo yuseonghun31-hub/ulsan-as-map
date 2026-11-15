@@ -1,5 +1,5 @@
 /* 울산 AS 지도 — 앱 껍데기 캐시 (화면 파일·아이콘만, 시트 자료는 캐시하지 않는다) */
-const CACHE = "ulsan-as-map-v1";
+const CACHE = "ulsan-as-map-v2";
 const SCOPE = self.registration.scope;
 const SHELL = [
   SCOPE,
