@@ -53,7 +53,7 @@ button.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--acc
 button.chip:focus-visible,.row:focus-visible,.zoom button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 button.chip .n{opacity:.75;font-variant-numeric:tabular-nums;margin-left:3px}
 main{flex:1;min-height:0;display:flex;flex-direction:column;--map-r:55}
-.mapwrap{position:relative;flex:var(--map-r) 1 0%;min-height:0;background:var(--bg);overflow:hidden;touch-action:none}
+.mapwrap{position:relative;flex:var(--map-r) 1 0%;min-height:120px;background:var(--bg);overflow:hidden;touch-action:none}
 /* 지도와 목록 사이 손잡이: 끌어서 높이 비율을 바꾸고, 두 번 누르면 기본으로 돌아간다 */
 .splitter{flex:0 0 auto;position:relative;height:26px;display:flex;align-items:center;justify-content:center;background:var(--panel);border-top:1px solid var(--line);cursor:row-resize;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;z-index:4}
 .splitter .sgrip{width:48px;height:5px;border-radius:999px;background:var(--line);transition:background .12s,height .12s}
@@ -281,7 +281,12 @@ document.getElementById("zfit").onclick=()=>fit(state.gu);
 const SPLIT_KEY="asmap.split",SPLIT_DEF=55,SPLIT_MIN=18,SPLIT_MAX=78,SPLIT_LIST=30;
 const mainEl=document.querySelector("main"),splitEl=document.getElementById("splitter");
 let splitR=SPLIT_DEF,SD=null,tapAt=0,tapMoved=false,splitRaf=0;
-const splitClamp=v=>Math.min(SPLIT_MAX,Math.max(SPLIT_MIN,v));
+function splitBounds(){const avail=mainEl.clientHeight-splitEl.offsetHeight;
+  if(!(avail>0))return[SPLIT_MIN,SPLIT_MAX]; // 화면이 낮으면 지도 120px·목록 96px은 남긴다
+  const lo=Math.min(SPLIT_MAX-1,Math.max(SPLIT_MIN,120/avail*100));
+  const hi=Math.max(lo+1,Math.min(SPLIT_MAX,100-96/avail*100));
+  return[lo,hi]}
+function splitClamp(v){const[lo,hi]=splitBounds();return Math.min(hi,Math.max(lo,+v||SPLIT_DEF))}
 function syncSplitBtn(){const b=document.getElementById("splitBig");if(!b)return;const big=splitR<=45;const t=big?"지도 크게":"목록 크게";
   if(b.textContent!==t)b.textContent=t;b.setAttribute("aria-pressed",big?"true":"false");
   b.title=big?"지도와 목록을 기본 비율로":"목록을 크게 보기"}
