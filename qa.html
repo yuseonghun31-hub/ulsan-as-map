@@ -220,7 +220,7 @@ button.mini:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 <main>
   <div class="mapwrap" id="wrap">
     <svg id="map" role="img" aria-label="경남·부산 지도 위에 울산 남구·중구·북구·동구 동 경계와 방문 위치"></svg>
-    <div class="legend"><span><i style="background:var(--accent)"></i>예정</span><span><i style="background:var(--done)"></i>완료</span><a class="attr" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">지도 © OSM·CARTO</a></div>
+    <div class="legend"><span><i style="background:var(--accent)"></i>예정</span><span><i style="background:var(--done)"></i>완료</span><a class="attr" href="https://www.esri.com/en-us/legal/terms/attribution" target="_blank" rel="noopener" title="Esri, HERE, Garmin, © OpenStreetMap contributors">지도 © Esri·HERE·OSM</a></div>
     <div class="zoom"><button id="zin" aria-label="확대">+</button><button id="zout" aria-label="축소">−</button><div class="zoomrow"><button id="zfit" class="zf" aria-label="경남 전체 보기">전체</button><button id="zul" class="zf" aria-label="울산만 보기">울산</button></div></div>
   </div>
   <div class="splitter" id="splitter" role="separator" aria-orientation="horizontal" aria-controls="wrap" aria-label="지도와 목록 높이 조절 — 끌어서 옮기고, 두 번 누르면 기본 비율" aria-valuemin="18" aria-valuemax="78" aria-valuenow="55" tabindex="0"><span class="sgrip" aria-hidden="true"></span><button class="sbtn" id="splitBig" type="button" aria-pressed="false" title="목록을 크게 보기">목록 크게</button></div>
@@ -277,10 +277,12 @@ const guLab={};GUS.forEach(g=>{const ds=GEO.dongs.filter(d=>d.g===g);const A=ds.
 items.forEach(it=>{if(!it.pos)return;const g=el("g",{class:"pt "+it.k,tabindex:"0"},gPts);it.c=el("circle",{cx:it.pos[0],cy:it.pos[1]},g);it.t=el("text",{x:it.pos[0],y:it.pos[1]},g);it.t.textContent=it.name;it.g=g;
   g.addEventListener("click",e=>{e.stopPropagation();select(it,false)});g.addEventListener("keydown",e=>{if(e.key==="Enter")select(it,false)})});
 function visible(it){return (state.gu==="전체"||it.gu===state.gu)&&(state.mode==="all"||it.k==="up")}
-// ── 배경 지도: 공개 타일(OpenStreetMap·CARTO)을 지금 보이는 범위에 맞춰 깐다 ──────
-//    울산 밖(경남·부산 어디든)도 도로와 지명이 보인다. 열쇠가 필요 없고, 지도 좌표는
+// ── 배경 지도: 공개 타일(Esri Light/Dark Gray Canvas)을 지금 보이는 범위에 맞춰 깐다 ──
+//    울산 밖(경남·부산 어디든)도 도로·하천·지형이 보인다. 열쇠가 필요 없고, 지도 좌표는
 //    경위도를 그대로 옮긴 등장방형이라 타일(메르카토르)과의 찌그러짐은 무시할 수 있다.
-const TILE_L="https://basemaps.cartocdn.com/light_all/",TILE_D="https://basemaps.cartocdn.com/dark_all/";
+const TILE_L="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/";
+const TILE_D="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/";
+function tileURL(base,z,x,y){return base+z+"/"+y+"/"+x}   // Esri 는 z/y/x 순서다
 const M_PER_UNIT=30.11;  // 지도 좌표 1 = 약 30.1m (경로 계산의 KM=0.03 과 같은 값)
 const lng2tx=l=>(l+180)/360, tx2lng=t=>t*360-180;
 const lat2ty=a=>{const s=Math.sin(a*Math.PI/180);return .5-Math.log((1+s)/(1-s))/(4*Math.PI)};
@@ -292,7 +294,7 @@ function queueTiles(){if(tileRaf)return;const go=()=>{tileRaf=0;try{drawTiles()}
   if(typeof requestAnimationFrame==="function")tileRaf=requestAnimationFrame(go);else go()}
 function drawTiles(){
   const cw=svg.clientWidth||0,ch=svg.clientHeight||0;if(!(cw>0&&ch>0))return;
-  const dark=isDark(),tpl=dark?TILE_D:TILE_L,dpr=(window.devicePixelRatio||1)>=2?"@2x":"";
+  const dark=isDark(),tpl=dark?TILE_D:TILE_L;
   const clat=(vb[1]+vb[3]/2-PYB)/PYA;                     // 화면 가운데 위도
   const mpp=(vb[2]/cw)*M_PER_UNIT;                        // 화면 1px 이 몇 m 인지
   let z=Math.floor(Math.log2(127400/Math.max(mpp,.05)));  // 156543×cos(35.5°)≈127,400
@@ -307,10 +309,10 @@ function drawTiles(){
   const want=new Set();
   for(let tx=x0;tx<=x1;tx++)for(let ty=y0;ty<=y1;ty++){
     if(ty<0||ty>=n)continue;
-    const ux=((tx%n)+n)%n,k=tpl+z+"/"+ux+"/"+ty+dpr;want.add(k);
+    const ux=((tx%n)+n)%n,k=tpl+z+"/"+ux+"/"+ty;want.add(k);
     if(TILES.has(k))continue;
     const img=el("image",{class:"tile",x:0,y:0,width:1,height:1,preserveAspectRatio:"none"},gTiles);
-    img.setAttribute("href",tpl+z+"/"+ux+"/"+ty+dpr+".png");
+    img.setAttribute("href",tileURL(tpl,z,ux,ty));
     img.addEventListener("error",()=>{img.style.display="none"});
     TILES.set(k,{img,tx,ty,n});
   }
@@ -323,7 +325,7 @@ function drawTiles(){
     o.img.setAttribute("height",(yb-yt).toFixed(1))});
 }
 function applyView(){svg.setAttribute("viewBox",vb.join(" "));const u=vb[2]/svg.clientWidth||1;const k=VB0[2]/vb[2];
-  GEO.dongs.forEach(d=>{const px=Math.sqrt(d.a)/u;d.lab.setAttribute("font-size",10*u);d.lab.setAttribute("y",d.c[1]-9*u);d.lab.style.display=px>46?"":"none"});
+  GEO.dongs.forEach(d=>{const px=Math.sqrt(d.a)/u;d.lab.setAttribute("font-size",10*u);d.lab.setAttribute("y",d.c[1]-9*u);d.lab.style.display=px>46&&k>0.7?"":"none"});
   REGION.areas.forEach(a=>{a.lab.setAttribute("font-size",9.5*u);a.lab.style.display=Math.sqrt(a.a)/u>26?"":"none"});
   GUS.forEach(g=>{guLab[g].setAttribute("font-size",26*u);guLab[g].style.display=k>0.45?"":"none"});
   ULAB.setAttribute("font-size",12*u);ULAB.style.display=k<0.45?"":"none";
@@ -435,7 +437,7 @@ function drawSide(){const s=document.getElementById("side");s.textContent="";con
     const by={};li.forEach(i=>(by[i.ld||"동 확인 필요"]=by[i.ld||"동 확인 필요"]||[]).push(i));
     Object.keys(by).sort((a,b)=>(a==="동 확인 필요")-(b==="동 확인 필요")||by[b].length-by[a].length).forEach(dn=>{const dg=h("div","dg",s);const t=h("div","dn",dg,dn+" ");h("span",null,t,by[dn].length+"건");
       by[dn].forEach(i=>{const r=h("button","row "+i.k+(state.sel===i?" sel":""),dg);r.type="button";h("span","when",r,i.k==="up"?i.date.slice(0,5)+" "+i.time:i.date);const w=h("span","who",r,i.name);h("span","sym",r,i.sym||"");h("span","mdl",r,i.model);r.onclick=()=>select(i,true)})})});
-  h("div","note",s,"바탕 지도는 OpenStreetMap·CARTO 공개 지도이고, 경남·부산 시군구 경계를 옅게 깔았습니다. 예정 건은 시트 `좌표` 탭의 네이버 좌표에 찍고, 좌표를 못 찾은 건과 완료 건은 주소에 적힌 동의 가운데 부근에 찍습니다. 경계는 행정동 기준이라 신정동처럼 여러 행정동으로 나뉜 곳은 그 중간에 표시됩니다. 주소에 동이 적혀 있지 않은 완료 건은 지도에 없고 목록의 '동 확인 필요'에 있습니다.")}
+  h("div","note",s,"바탕 지도는 Esri 기본 지도(밝은/어두운 회색)이고, 경남·부산 시군구 경계를 옅게 깔았습니다. 예정 건은 시트 `좌표` 탭의 네이버 좌표에 찍고, 좌표를 못 찾은 건과 완료 건은 주소에 적힌 동의 가운데 부근에 찍습니다. 경계는 행정동 기준이라 신정동처럼 여러 행정동으로 나뉜 곳은 그 중간에 표시됩니다. 주소에 동이 적혀 있지 않은 완료 건은 지도에 없고 목록의 '동 확인 필요'에 있습니다.")}
 svg.addEventListener("click",()=>{if(state.sel){state.sel=null;refresh()}});
 window.addEventListener("resize",()=>fit(state.gu));
 // ── 경로 추천: 확정 예약은 시간을 고정하고, 그 사이에 미확정 건을 이동 시간이 가장 적게 늘어나는 자리에 끼운다
