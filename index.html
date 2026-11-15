@@ -299,6 +299,7 @@ function splitLoad(){let v=NaN;try{v=parseFloat(localStorage.getItem(SPLIT_KEY)|
 function splitToggle(){splitApply(splitR<=45?SPLIT_DEF:SPLIT_LIST,true,true)}
 function sBegin(e){if(e.button>0||e.isPrimary===false)return;if(e.target.closest(".sbtn"))return;
   e.preventDefault();tapMoved=false;SD={id:e.pointerId,y0:e.clientY,h:splitEl.offsetHeight};
+  try{splitEl.focus({preventScroll:true})}catch(_){}
   try{splitEl.setPointerCapture(e.pointerId)}catch(_){}
   splitEl.classList.add("on");document.body.classList.add("splitting")}
 function sMove(e){if(!SD||e.pointerId!==SD.id)return;
