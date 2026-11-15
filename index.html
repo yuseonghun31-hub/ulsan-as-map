@@ -334,7 +334,7 @@ function applyView(){svg.setAttribute("viewBox",vb.join(" "));const u=vb[2]/svg.
   ULAB.setAttribute("font-size",12*u);ULAB.style.display=k<0.45?"":"none";
   items.forEach(it=>{if(!it.g)return;const up=it.k==="up";it.c.setAttribute("r",(up?5.5:3.6)*u);
     it.t.setAttribute("font-size",(up?12:10.5)*u);it.t.setAttribute("dx",(up?8:6)*u);it.t.setAttribute("dy",(3.5+(up?it.rank*13:0))*u);it.t.setAttribute("stroke-width",3*u);
-    it.t.style.display=(up||k>=3||state.sel===it)?"":"none"});
+    it.t.style.display=(state.sel===it||((up||k>=3)&&k>=0.55))?"":"none"});
   sizeRoute(u);queueTiles()}
 function refresh(){GEO.dongs.forEach(d=>d.el.classList.toggle("dimgu",state.gu!=="전체"&&d.g!==state.gu));
   items.forEach(it=>{if(it.g){it.g.style.display=visible(it)?"":"none";it.g.classList.toggle("sel",state.sel===it);it.g.classList.toggle("unv",it.k==="up"&&it.vs==="bad")}});
