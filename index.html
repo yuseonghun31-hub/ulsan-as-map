@@ -163,7 +163,6 @@ header{position:absolute;left:0;right:0;top:0;z-index:30;
 h1{font-size:16.5px;font-weight:700;margin:0;letter-spacing:-.03em;white-space:nowrap;flex:0 0 auto}
 .asof{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;
   text-overflow:ellipsis;flex:1 1 auto;text-align:right;letter-spacing:-.01em;cursor:pointer;padding-left:6px}
-.asof::before{content:"↻";margin-right:4px;opacity:.6;font-size:10.5px}
 .asof.warn{color:var(--warn)}
 .mini{flex:0 0 auto;display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;
   padding:5px 9px 5px 8px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);
@@ -822,8 +821,8 @@ function parseDone(v){const out=[];const lim=Date.now()-35*864e5;(v||[]).forEach
   out.push({k:"done",date:d[2]+"/"+d[3],gu:guOf(r[3],addr),name:String(r[6]||""),model:shortM(r[9]),no,tel:String(r[4]||"").includes("전화"),ld:ldOf(guOf(r[3],addr),addr,no)})});return out}
 function setAsof(){const e=document.getElementById("asof");if(!e)return;const live=sheetState==="live";
   const w=lastAt?new Date(lastAt):null,t=w?String(w.getHours()).padStart(2,"0")+":"+String(w.getMinutes()).padStart(2,"0"):"";
-  e.textContent=live?((sheetAt||"최신")+" 기준"+(t?" · "+t:""))
-    :sheetState==="wait"?"불러오는 중…":("읽지 못함"+(sheetErr?" · "+sheetErr:"")+(loading?"":" · 눌러서 다시 시도"));
+  e.textContent="↻ "+(live?((sheetAt||"최신")+" 기준"+(t?" · "+t:""))
+    :sheetState==="wait"?"불러오는 중…":("읽지 못함"+(sheetErr?" · "+sheetErr:"")+(loading?"":" · 눌러서 다시 시도")));
   e.title=live?"눌러서 새로고침 · 시트 "+(sheetAt||"최신")+(t?" "+t+" 갱신":""):"눌러서 다시 시도";
   e.classList.toggle("warn",!live&&sheetState!=="wait")}
 function rebuild(){
