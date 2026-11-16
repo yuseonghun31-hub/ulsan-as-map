@@ -104,7 +104,7 @@ svg#map.drag{cursor:grabbing}
 .pt.sel .dot{stroke:var(--warn);stroke-width:3}
 .pt.unv .dot{fill:var(--panel);stroke:var(--accent);stroke-width:2}
 .pt.unv.sel .dot{stroke:var(--warn);stroke-width:3}
-.pt .lbl{fill:var(--panel);fill-opacity:.86;stroke:rgba(14,24,20,.10);stroke-width:1;vector-effect:non-scaling-stroke}
+.pt .lbl{fill:var(--panel);fill-opacity:.93;stroke:rgba(14,24,20,.10);stroke-width:1;vector-effect:non-scaling-stroke}
 :root[data-theme="dark"] .pt .lbl{stroke:rgba(255,255,255,.09)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pt .lbl{stroke:rgba(255,255,255,.09)}}
 .pt .lbl.sel{fill:var(--warn);fill-opacity:.95;stroke:none}
@@ -488,11 +488,15 @@ function applyView(){svg.setAttribute("viewBox",vb.join(" "));const u=vb[2]/svg.
     it.lr=[tx-f*0.5,it.pos[1]-h/2,w,h]});
   const order=items.filter(it=>it.g&&it.on).sort((a,b)=>(state.sel===a?-1:state.sel===b?1:0)||(a.k===b.k?0:a.k==="up"?-1:1));
   const placed=[];
-  order.forEach(it=>{const r=it.lr;let over=false;
-    if(state.sel!==it){for(let i=0;i<placed.length;i++){const q=placed[i],m=r[3]*0.3;
-      if(r[0]<q[0]+q[2]+m&&q[0]<r[0]+r[2]+m&&r[1]<q[1]+q[3]&&q[1]<r[1]+r[3]){over=true;break}}}
-    if(over){it.t.style.display="none";if(it.r)it.r.style.display="none";return}
+  const clash=r=>{for(let i=0;i<placed.length;i++){const q=placed[i],m=r[3]*0.28;
+    if(r[0]<q[0]+q[2]+m&&q[0]<r[0]+r[2]+m&&r[1]<q[1]+q[3]&&q[1]<r[1]+r[3])return true}return false};
+  order.forEach(it=>{const r0=it.lr;let r=r0;
+    if(state.sel!==it&&clash(r0)){               // 겹치면 라벨을 위·아래로 한 칸씩 밀어 자리를 찾는다
+      const hh=r0[3],tx=r0[0],ty=r0[1];
+      for(const s of [1,-1,2,-2]){const c=[tx,ty+s*hh*1.12,r0[2],hh];if(!clash(c)){r=c;break}}
+      if(clash(r)){it.t.style.display="none";if(it.r)it.r.style.display="none";return}}
     placed.push(r);
+    if(it.t)it.t.setAttribute("y",(r[1]+r[3]/2+r[3]*0.231).toFixed(2));
     if(it.r){it.r.setAttribute("class","lbl"+(state.sel===it?" sel":""));it.r.setAttribute("x",r[0].toFixed(1));
       it.r.setAttribute("y",r[1].toFixed(1));it.r.setAttribute("width",r[2].toFixed(1));
       it.r.setAttribute("height",r[3].toFixed(1));it.r.setAttribute("rx",(r[3]/2).toFixed(1))}});
