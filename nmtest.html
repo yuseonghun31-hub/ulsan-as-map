@@ -1,0 +1,30 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=zzgl9n9epj"></script>
+<style>html,body{margin:0;height:100%;background:#111}#map{position:absolute;inset:0}
+#out{position:absolute;left:0;top:0;z-index:99;background:#fff;color:#000;font:11px/1.35 monospace;white-space:pre-wrap;max-height:45%;overflow:auto;max-width:100%}
+.dk .naver-map-layer{filter:invert(100%) hue-rotate(180deg) brightness(92%) contrast(92%) saturate(85%)}</style>
+</head><body>
+<div id="map"></div><div id="out">loading…</div>
+<script>
+window.navermap_authFailure=function(){document.getElementById('out').textContent='AUTH_FAIL';};
+window.addEventListener('load',function(){
+  var o=document.getElementById('out');
+  if(!(window.naver&&naver.maps)){o.textContent='NO_NAVER';return}
+  var map=new naver.maps.Map('map',{center:new naver.maps.LatLng(35.535,129.31),zoom:14,zoomControl:false,scaleControl:false,mapDataControl:false,logoControl:true});
+  function r(a){return a.map(function(p){return new naver.maps.LatLng(p[0],p[1])})}
+  var outer=[[35.60,129.20],[35.60,129.40],[35.40,129.40],[35.40,129.20]];
+  var hole=[[35.55,129.30],[35.55,129.32],[35.53,129.32],[35.53,129.30]];
+  new naver.maps.Polygon({map:map,paths:[r(outer),r(hole)],fillColor:'#000000',fillOpacity:.55,strokeColor:'#ff2222',strokeWeight:1});
+  new naver.maps.Polygon({map:map,paths:[r(hole.slice().reverse())],fillColor:'#22ff22',fillOpacity:.5,strokeOpacity:0});
+  setTimeout(function(){
+    var h=[],root=document.getElementById('map');
+    function walk(el,d){if(d>5)return;var c=(typeof el.className==='string'?el.className:'').trim().replace(/\s+/g,'.');
+      h.push(new Array(d+1).join('  ')+el.tagName.toLowerCase()+(el.id?'#'+el.id:'')+(c?'.'+c:''));for(var i=0;i<el.children.length&&i<14;i++)walk(el.children[i],d+1);}
+    walk(root,0);
+    h.push('zoom='+map.getZoom()+' bounds='+map.getBounds().toString());
+    o.textContent=h.join('\n');
+    window.__map=map;
+  },3000);
+});
+</script></body></html>
