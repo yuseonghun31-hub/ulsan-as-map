@@ -330,6 +330,7 @@ body.mapsmall button.chip{height:27px;font-size:11.5px;padding:0 10px}
 
 @media (min-width:860px){
   header{right:384px}
+  .asof{flex:0 1 auto;text-align:left;margin-left:8px;max-width:460px}
   main{--sheet-h:0px}
   .mapwrap{right:384px;bottom:0}
   .side{left:auto;right:0;top:0;bottom:0;width:384px;height:auto;border-radius:0;border-top:0;
@@ -585,7 +586,7 @@ function splitApply(r,save,refit){splitR=splitClamp(+r||SPLIT_DEF);
   const avail=mainEl.clientHeight,mapPx=avail*splitR/100;
   if(avail>0){                                        // 지도에 남는 높이가 적으면 확대·범례를 줄이고 헤더도 한 줄로 접는다
     wrap.classList.toggle("tight",mapPx<210);
-    document.body.classList.toggle("mapsmall",mapPx-mapInset()<215)}
+    document.body.classList.toggle("mapsmall",window.innerWidth<860&&mapPx-mapInset()<215)}
   setHeadH();
   if(save){try{localStorage.setItem(SPLIT_KEY,splitR.toFixed(1))}catch(e){}}
   if(refit){cancelAnimationFrame(splitRaf);splitRaf=requestAnimationFrame(refitSplit)}}
