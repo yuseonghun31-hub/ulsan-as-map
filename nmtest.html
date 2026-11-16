@@ -16,13 +16,17 @@ window.addEventListener('load',function(){
   var outer=[[35.60,129.20],[35.60,129.40],[35.40,129.40],[35.40,129.20]];
   var hole=[[35.55,129.30],[35.55,129.32],[35.53,129.32],[35.53,129.30]];
   new naver.maps.Polygon({map:map,paths:[r(outer),r(hole)],fillColor:'#000000',fillOpacity:.55,strokeColor:'#ff2222',strokeWeight:1});
-  new naver.maps.Polygon({map:map,paths:[r(hole.slice().reverse())],fillColor:'#22ff22',fillOpacity:.5,strokeOpacity:0});
+  
+  var pn=null;try{pn=map.getPanes().mapPane}catch(e){}
+  if(pn){pn.style.filter='invert(100%) hue-rotate(180deg) brightness(92%) contrast(92%) saturate(85%)'}
   setTimeout(function(){
     var h=[],root=document.getElementById('map');
     function walk(el,d){if(d>5)return;var c=(typeof el.className==='string'?el.className:'').trim().replace(/\s+/g,'.');
       h.push(new Array(d+1).join('  ')+el.tagName.toLowerCase()+(el.id?'#'+el.id:'')+(c?'.'+c:''));for(var i=0;i<el.children.length&&i<14;i++)walk(el.children[i],d+1);}
     walk(root,0);
-    h.push('zoom='+map.getZoom()+' bounds='+map.getBounds().toString());
+    map.setZoom(13.4);
+    h.push('zoom='+map.getZoom()+' ver='+(naver.maps.VERSION||'?')+' pane='+(pn?pn.tagName+' children='+pn.children.length:'none'));
+    h.push('boundHole='+(document.querySelector('#map').innerHTML.length));
     o.textContent=h.join('\n');
     window.__map=map;
   },3000);
