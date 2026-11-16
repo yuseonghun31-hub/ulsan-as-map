@@ -23,8 +23,8 @@
   --bg:#f3f5f4; --panel:#ffffff; --ink:#18211f; --muted:#62706c; --line:#d5dcd9;
   --accent:#0b6b5c; --accent-ink:#ffffff; --done:#8b9793; --warn:#b4530a;
   --nam:#bfe3cd; --jung:#eed9a6; --buk:#c9def0; --dong:#f2cad8; --edge:#93a5a0; --gu-ink:#2f3d39;
-  --fillop:.20; --jn:#5b7186; --jnl:#8296ab; --bs:#6f6a8a; --bsl:#8f89a8; --uj:#63796d; --ujl:#849a8e;
-  --dim:rgba(6,12,10,.40);
+  --fillop:.14; --jn:#5b7186; --jnl:#8296ab; --bs:#6f6a8a; --bsl:#8f89a8; --uj:#63796d; --ujl:#849a8e;
+  --dim:rgba(6,12,10,.36);
   --font-display:"Do Hyeon","IBM Plex Sans KR",system-ui,sans-serif;
   --font-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
 }
@@ -33,7 +33,7 @@
     --bg:#111615; --panel:#1a2120; --ink:#e7eeeb; --muted:#96a39f; --line:#2e3a37;
     --accent:#4fd1b5; --accent-ink:#06211c; --done:#6f7c78; --warn:#f0a35a;
     --nam:#2b5c47; --jung:#6b6031; --buk:#274c68; --dong:#5c3745; --edge:#0d1211; --gu-ink:#dfe9e5;
-    --fillop:.30; --jn:#33506b; --jnl:#4e6d8a; --bs:#413a5e; --bsl:#635a83; --uj:#2c4a3d; --ujl:#43685a;
+    --fillop:.16; --jn:#33506b; --jnl:#4e6d8a; --bs:#413a5e; --bsl:#635a83; --uj:#2c4a3d; --ujl:#43685a;
     --dim:rgba(0,0,0,.50);
     color-scheme:dark;
   }
@@ -42,7 +42,7 @@
   --bg:#111615; --panel:#1a2120; --ink:#e7eeeb; --muted:#96a39f; --line:#2e3a37;
   --accent:#4fd1b5; --accent-ink:#06211c; --done:#6f7c78; --warn:#f0a35a;
   --nam:#2b5c47; --jung:#6b6031; --buk:#274c68; --dong:#5c3745; --edge:#0d1211; --gu-ink:#dfe9e5;
-  --fillop:.30; --jn:#33506b; --jnl:#4e6d8a; --bs:#413a5e; --bsl:#635a83; --uj:#2c4a3d; --ujl:#43685a;
+  --fillop:.16; --jn:#33506b; --jnl:#4e6d8a; --bs:#413a5e; --bsl:#635a83; --uj:#2c4a3d; --ujl:#43685a;
   --dim:rgba(0,0,0,.50);
   color-scheme:dark;
 }
@@ -79,7 +79,7 @@ body.splitting{user-select:none;-webkit-user-select:none}
 svg#map{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1;pointer-events:none;-webkit-tap-highlight-color:transparent}
 svg#map .pt{pointer-events:auto;cursor:pointer}
 /* 어두운 테마: 네이버 지도를 반전시켜 야간 지도처럼. NAVER 로고만 원색으로 되돌린다 */
-:root[data-theme="dark"] #nmap{filter:invert(1) hue-rotate(180deg) brightness(.96) contrast(.86) saturate(.68)}
+:root[data-theme="dark"] #nmap{filter:invert(1) hue-rotate(180deg) brightness(.95) contrast(.82) saturate(.5)}
 :root[data-theme="dark"] #nmap a img{filter:invert(1) hue-rotate(180deg) brightness(1.05) contrast(1.18) saturate(1.45)}
 .mapnote{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:12.5px;color:var(--warn);max-width:82%;text-align:center;line-height:1.5}
 .mapnote[hidden]{display:none}
