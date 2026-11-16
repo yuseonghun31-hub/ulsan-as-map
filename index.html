@@ -201,36 +201,32 @@ button.chip:focus-visible,.sbtn:focus-visible,.cardrow:focus-visible,.ract:focus
 .splitter .sbtn{position:absolute;right:12px;top:50%;transform:translateY(-50%);font:inherit;font-size:11px;
   font-weight:600;letter-spacing:-.01em;line-height:1;padding:6px 10px;border-radius:999px;
   border:1px solid var(--line);background:var(--panel-2);color:var(--muted);cursor:pointer;transition:color .18s,border-color .18s}
-<body>
-<div id="gate" class="gate" hidden>
-  <div class="gcard">
-    <img class="ico" src="icon-192.png" alt="">
-    <h2>울산 AS 지도</h2>
-    <p class="gsub" id="gsub">PIN을 입력하면 지도가 열립니다</p>
-    <input id="pinin" type="password" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="PIN">
-    <input id="newpin" type="password" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="새 PIN (숫자 4~12자리)">
-    <button id="pinok" type="button">열기</button>
-    <div class="gerr" id="pinerr"></div>
-    <button id="pinchg" class="glink" type="button">PIN 바꾸기</button><button id="pincancel" class="glink" type="button">취소</button>
-  </div>
-</div>
-<header id="head">
-  <div class="hrow">
-    <h1>울산 AS 동선 지도</h1>
-    <span class="asof" id="asof" title="눌러서 새로고침">시트 불러오는 중…</span>
-    <button id="lockbtn" class="mini" type="button" title="잠그고 PIN 다시 묻기" aria-label="잠금"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 10.5V7.5a4.5 4.5 0 0 1 9 0v3" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/><rect x="4.2" y="10.4" width="15.6" height="10.2" rx="3.2" fill="none" stroke="currentColor" stroke-width="2.1"/></svg><span>잠금</span></button>
-  </div>
-  <div class="bar" id="bar"></div>
-</header>
-<main>
-  <div class="mapwrap" id="wrap">
-    <svg id="map" role="img" aria-label="경남·부산 지도 위에 울산 남구·중구·북구·동구 동 경계와 방문 위치"></svg>
-    <div class="legend"><span><i style="background:var(--accent)"></i>예정</span><span><i style="background:var(--done)"></i>완료</span><a class="attr" href="https://www.esri.com/en-us/legal/terms/attribution" target="_blank" rel="noopener" title="Esri, HERE, Garmin, © OpenStreetMap contributors">지도 © Esri·HERE·OSM</a></div>
-    <div class="zoom"><button id="zin" aria-label="확대">+</button><button id="zout" aria-label="축소">−</button><div class="zoomrow"><button id="zfit" class="zf" aria-label="경남 전체 보기">전체</button><button id="zul" class="zf" aria-label="울산만 보기">울산</button></div></div>
-  </div>
-  <div class="splitter" id="splitter" role="separator" aria-orientation="horizontal" aria-controls="wrap" aria-label="지도와 목록 높이 조절 — 끌어서 옮기고, 두 번 누르면 기본 비율" aria-valuemin="18" aria-valuemax="78" aria-valuenow="55" tabindex="0"><span class="sgrip" aria-hidden="true"></span><button class="sbtn" id="splitBig" type="button" aria-pressed="false" title="목록을 크게 보기">목록 크게</button></div>
-  <div class="side" id="side"></div>
-</main>
+.splitter .sbtn:active,.splitter .sbtn[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+body.splitting{user-select:none;-webkit-user-select:none}
+
+h2{font-size:12.5px;font-weight:600;color:var(--muted);margin:16px 2px 9px;display:flex;align-items:baseline;
+  justify-content:space-between;letter-spacing:-.01em}
+h2:first-child{margin-top:2px}
+h2 b{color:var(--ink);font-weight:700;font-size:14.5px;letter-spacing:-.03em}
+h2 span{font-variant-numeric:tabular-nums;font-size:11.5px}
+
+/* 고객 카드 */
+.cardrow{display:block;width:100%;text-align:left;font:inherit;color:inherit;background:var(--panel);
+  border:1px solid var(--line);border-radius:14px;padding:11px 12px 12px;margin:0 0 9px;cursor:pointer;
+  box-shadow:var(--sh-1);transition:transform .13s ease,box-shadow .18s ease,border-color .18s ease,background .18s ease}
+.cardrow:active{transform:scale(.987);box-shadow:none}
+.cardrow.sel{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft),var(--sh-2)}
+.cardrow.done{background:var(--panel);box-shadow:none;border-color:var(--line);opacity:.94}
+.cr-top{display:flex;align-items:center;gap:6px;margin-bottom:7px}
+.badge{display:inline-flex;align-items:center;flex:0 0 auto;font-size:11px;font-weight:700;letter-spacing:-.01em;
+  padding:3px 7px;border-radius:7px;background:var(--accent);color:var(--accent-ink);font-variant-numeric:tabular-nums}
+.badge.done{background:var(--panel-2);color:var(--muted);border:1px solid var(--line);font-weight:600}
+.badge.tel{background:transparent;color:var(--muted);border:1px dashed var(--line);font-weight:600}
+.gtag{font-size:10.5px;font-weight:600;letter-spacing:-.01em;padding:3px 7px;border-radius:7px;white-space:nowrap}
+.gtag.g-nam{background:var(--tnam-bg);color:var(--tnam-ink)}
+.gtag.g-jung{background:var(--tjung-bg);color:var(--tjung-ink)}
+.gtag.g-buk{background:var(--tbuk-bg);color:var(--tbuk-ink)}
+.gtag.g-dong{background:var(--tdong-bg);color:var(--tdong-ink)}
 .gtag.g-etc{background:var(--tetc-bg);color:var(--tetc-ink)}
 .mtag{margin-left:auto;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   font-size:10.5px;font-weight:500;color:var(--muted);padding:3px 7px;border-radius:7px;background:var(--panel-2);
@@ -346,8 +342,12 @@ html.locked,html.locked body{overflow:hidden}
     <button id="pinchg" class="glink" type="button">PIN 바꾸기</button><button id="pincancel" class="glink" type="button">취소</button>
   </div>
 </div>
-<header>
-  <div class="top"><h1>울산 AS 동선 지도</h1><span class="asof" id="asof" title="눌러서 새로고침">시트 불러오는 중…</span><button id="lockbtn" class="mini" type="button" title="잠그고 PIN 다시 묻기">잠금</button></div>
+<header id="head">
+  <div class="hrow">
+    <h1>울산 AS 동선 지도</h1>
+    <span class="asof" id="asof" title="눌러서 새로고침">시트 불러오는 중…</span>
+    <button id="lockbtn" class="mini" type="button" title="잠그고 PIN 다시 묻기" aria-label="잠금"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 10.5V7.5a4.5 4.5 0 0 1 9 0v3" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/><rect x="4.2" y="10.4" width="15.6" height="10.2" rx="3.2" fill="none" stroke="currentColor" stroke-width="2.1"/></svg><span>잠금</span></button>
+  </div>
   <div class="bar" id="bar"></div>
 </header>
 <main>
@@ -798,8 +798,9 @@ function parseDone(v){const out=[];const lim=Date.now()-35*864e5;(v||[]).forEach
   out.push({k:"done",date:d[2]+"/"+d[3],gu:guOf(r[3],addr),name:String(r[6]||""),model:shortM(r[9]),no,tel:String(r[4]||"").includes("전화"),ld:ldOf(guOf(r[3],addr),addr,no)})});return out}
 function setAsof(){const e=document.getElementById("asof");if(!e)return;const live=sheetState==="live";
   const w=lastAt?new Date(lastAt):null,t=w?String(w.getHours()).padStart(2,"0")+":"+String(w.getMinutes()).padStart(2,"0"):"";
-  e.textContent=live?("시트 "+(sheetAt||"최신")+" 기준"+(t?" · "+t+" 갱신":"")+" · 눌러서 새로고침")
-    :sheetState==="wait"?"시트 불러오는 중…":"시트를 읽지 못했습니다 · "+(sheetErr||"응답 없음")+(loading?"":" · 눌러서 다시 시도");
+  e.textContent=live?((sheetAt||"최신")+" 기준"+(t?" · "+t:""))
+    :sheetState==="wait"?"불러오는 중…":("읽지 못함"+(sheetErr?" · "+sheetErr:"")+(loading?"":" · 눌러서 다시 시도"));
+  e.title=live?"눌러서 새로고침 · 시트 "+(sheetAt||"최신")+(t?" "+t+" 갱신":""):"눌러서 다시 시도";
   e.classList.toggle("warn",!live&&sheetState!=="wait")}
 function rebuild(){
   const up=(liveUp||UP.map(r=>({k:"up",date:r[0],time:r[1],gu:r[2],name:r[3],ld:r[4],addr:r[5],model:r[6],sym:r[7],no:r[8]}))).map(o=>Object.assign({},o));
