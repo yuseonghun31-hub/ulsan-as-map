@@ -578,10 +578,11 @@ function refitSplit(){const W=svg.clientWidth||1,H=svg.clientHeight||1;if(!(W>0&
   vb=[vb[0],cy-(H/2)*sc,vb[2],H*sc];applyView()}
 function splitApply(r,save,refit){splitR=splitClamp(+r||SPLIT_DEF);
   mainEl.style.setProperty("--map-r",splitR.toFixed(2));splitEl.setAttribute("aria-valuenow",String(Math.round(splitR)));syncSplitBtn();
-  setHeadH();const avail=mainEl.clientHeight;
-  if(avail>0){const small=avail*splitR/100<240;      // 지도 칸이 낮으면 확대·범례를 줄이고, 헤더도 한 줄로 접는다
-    wrap.classList.toggle("tight",avail*splitR/100<200);
-    document.body.classList.toggle("mapsmall",small)}
+  const avail=mainEl.clientHeight,mapPx=avail*splitR/100;
+  if(avail>0){                                        // 지도에 남는 높이가 적으면 확대·범례를 줄이고 헤더도 한 줄로 접는다
+    wrap.classList.toggle("tight",mapPx<210);
+    document.body.classList.toggle("mapsmall",mapPx-mapInset()<215)}
+  setHeadH();
   if(save){try{localStorage.setItem(SPLIT_KEY,splitR.toFixed(1))}catch(e){}}
   if(refit){cancelAnimationFrame(splitRaf);splitRaf=requestAnimationFrame(refitSplit)}}
 function splitLoad(){let v=NaN;try{v=parseFloat(localStorage.getItem(SPLIT_KEY)||"")}catch(e){}
