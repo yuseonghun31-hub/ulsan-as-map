@@ -342,6 +342,8 @@ function initMap(){
   NMAP.addListener("idle",()=>{takeCam();movingOff();applyView();prog=false});
   NMAP.addListener("dragstart",()=>{if(!prog)camMoved=true});
   NMAP.addListener("click",()=>{if(state.sel){state.sel=null;refresh()}});
+  syncMapSize();
+  if(typeof ResizeObserver!=="undefined"){try{new ResizeObserver(()=>{if(syncMapSize())queueView()}).observe(wrap)}catch(e){}}
   camFail("");applyView();return true;
 }
 function loadNaver(){
@@ -373,8 +375,10 @@ function prepareGeo(){
 }
 // 지금 지도가 화면에 실제로 보여 주는 자리(경위도 상자)를 세계 픽셀 상자로 돌려준다.
 // 확대·이동 애니메이션 중에도 지도의 실제 뷰포트를 그대로 쓰므로 그림이 지도와 같은 박자로 움직인다.
-function liveBox(){
+function liveBox(cw,ch){
   if(NMAP){try{
+    const s=NMAP.getSize();                 // 지도가 아는 크기와 실제 칸이 다르면 상자가 어긋난다
+    if(Math.abs(s.width-cw)>1||Math.abs(s.height-ch)>1)return null;
     const b=NMAP.getBounds();if(b){
       const ne=b.getNE?b.getNE():b.getMax(),sw=b.getSW?b.getSW():b.getMin();
       if(ne&&sw){const p=wpt(sw.lng(),ne.lat()),q=wpt(ne.lng(),sw.lat());   // p=왼쪽 위, q=오른쪽 아래
@@ -384,13 +388,29 @@ function liveBox(){
   return null;
 }
 // 지도를 움직이는 동안 무거운 필터를 잠시 끈다(그림이 뒤늦게 따라오는 현상 완화)
+// 지도가 기억하는 크기(폭·높이)를 실제 지도 칸에 맞춘다 — 목록이 접히거나 화면이 바뀔 때
+// 크기가 어긋나 있으면 지도 중심이 한쪽으로 밀리고 getBounds()가 실제 보이는 범위와 달라진다
+let sizeFix=false,sizeTries=0;
+function syncMapSize(){
+  if(!NMAP||sizeFix)return false;
+  const w=wrap.clientWidth|0,h=wrap.clientHeight|0;if(!(w>0&&h>0))return false;
+  let sw=0,sh=0;try{const s=NMAP.getSize();sw=s.width;sh=s.height}catch(e){return false}
+  if(Math.abs(sw-w)<1&&Math.abs(sh-h)<1){sizeTries=0;return false}
+  if(sizeTries>3)return false;                 // 맞추지 못하면 반복하지 않는다
+  sizeTries++;
+  sizeFix=true;
+  try{NMAP.setSize(new naver.maps.Size(w,h))}catch(e){}
+  setTimeout(()=>{sizeFix=false;queueView()},80);
+  return true;
+}
 let movT=0;
 function movingOn(){if(!wrap)return;wrap.classList.add("moving");clearTimeout(movT);movT=setTimeout(movingOff,320)}
 function movingOff(){clearTimeout(movT);movT=0;if(wrap)wrap.classList.remove("moving")}
 function applyView(){
   const cw=svg.clientWidth||wrap.clientWidth||0,ch=svg.clientHeight||wrap.clientHeight||0;
   if(!(cw>0&&ch>0))return;
-  const bx=liveBox();
+  syncMapSize();
+  const bx=liveBox(cw,ch);
   if(bx)vb=bx;                            // 지도가 보여 주는 그대로
   else{const wp=wpt(CAM.lng,CAM.lat),sc0=Math.pow(2,ZREF-CAM.zoom);vb=[wp[0]-cw*sc0/2,wp[1]-ch*sc0/2,cw*sc0,ch*sc0]}
   svg.setAttribute("viewBox",vb.join(" "));
