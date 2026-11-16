@@ -319,8 +319,12 @@ function camFail(msg){const e=document.getElementById("mapnote");if(!e)return;
   if(msg){e.hidden=false;e.textContent=msg}else{e.hidden=true;e.textContent=""}}
 window.navermap_authFailure=function(){camFail("네이버 지도 인증에 실패했습니다. 콘솔의 Web Dynamic Map 사용 설정과 등록 도메인(yuseonghun31-hub.github.io)을 확인해 주세요.")};
 function takeCam(){if(!NMAP)return;const c=NMAP.getCenter();CAM.lat=c.lat();CAM.lng=c.lng();CAM.zoom=NMAP.getZoom()}
-function mapGo(lat,lng,zoom){if(!NMAP)return;prog=true;
+function mapGo(lat,lng,zoom){if(!NMAP)return;prog=true;setTimeout(()=>{prog=false},1400);
   NMAP.morph(new naver.maps.LatLng(lat,lng),Math.max(6,Math.min(19,Math.round(zoom))))}
+// 지도 이벤트가 한 프레임에 여러 번 와도 그림은 한 번만 다시 그린다
+let viewRaf=0;
+function queueView(){if(viewRaf)return;const go=()=>{viewRaf=0;applyView()};
+  if(typeof requestAnimationFrame==="function")viewRaf=requestAnimationFrame(go);else go()}
 function initMap(){
   if(!(window.naver&&window.naver.maps&&window.naver.maps.Map))return false;
   const box=document.getElementById("nmap");if(!box)return false;
@@ -328,7 +332,7 @@ function initMap(){
     minZoom:6,maxZoom:19,zoomControl:false,scaleControl:false,mapDataControl:false,
     logoControl:true,logoControlOptions:{position:naver.maps.Position.TOP_RIGHT},
     mapTypeId:naver.maps.MapTypeId.NORMAL});}catch(e){NMAP=null;return false}
-  const upd=()=>{takeCam();applyView()};
+  const upd=()=>{takeCam();queueView()};
   ["bounds_changed","center_changed","zoom_changed","size_changed"].forEach(ev=>NMAP.addListener(ev,upd));
   NMAP.addListener("idle",()=>{takeCam();applyView();prog=false});
   NMAP.addListener("dragstart",()=>{if(!prog)camMoved=true});
