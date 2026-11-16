@@ -476,7 +476,7 @@ function applyView(){svg.setAttribute("viewBox",vb.join(" "));const u=vb[2]/svg.
   GUS.forEach(g=>{guLab[g].setAttribute("font-size",26*u);guLab[g].style.display=k>0.45?"":"none"});
   ULAB.setAttribute("x",(B[0]+B[2])/2);ULAB.setAttribute("y",B[3]+12*u);ULAB.setAttribute("font-size",12*u);ULAB.style.display=k<0.45?"":"none";
   // 핀은 둥근 점, 이름은 그 옆의 캡슐 라벨. 라벨끼리 겹치면 뒤에 오는 라벨만 감춘다(선택한 건은 늘 보인다)
-  items.forEach(it=>{if(!it.g)return;const up=it.k==="up";const f=(up?11.5:10)*u;
+  items.forEach(it=>{if(!it.g)return;const up=it.k==="up";const f=(up?11:10)*u;
     it.c.setAttribute("r",(up?5.6:3.4)*u);if(it.hit)it.hit.setAttribute("r",(up?13:8)*u);
     it.on=state.sel===it||((up||k>=3)&&k>=0.55);
     it.t.setAttribute("font-size",f);
@@ -493,7 +493,7 @@ function applyView(){svg.setAttribute("viewBox",vb.join(" "));const u=vb[2]/svg.
   order.forEach(it=>{const r0=it.lr;let r=r0;
     if(state.sel!==it&&clash(r0)){               // 겹치면 라벨을 위·아래로 한 칸씩 밀어 자리를 찾는다
       const hh=r0[3],tx=r0[0],ty=r0[1];
-      for(const s of [1,-1,2,-2]){const c=[tx,ty+s*hh*1.12,r0[2],hh];if(!clash(c)){r=c;break}}
+      for(const s of [1,-1,2,-2,3,-3,4,-4,5,-5]){const c=[tx,ty+s*hh*1.06,r0[2],hh];if(!clash(c)){r=c;break}}
       if(clash(r)){it.t.style.display="none";if(it.r)it.r.style.display="none";return}}
     placed.push(r);
     if(it.t)it.t.setAttribute("y",(r[1]+r[3]/2+r[3]*0.231).toFixed(2));
