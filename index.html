@@ -69,6 +69,7 @@ main{flex:1;min-height:0;display:flex;flex-direction:column;--map-r:55}
 .mapwrap.tight .zoom button{width:30px;height:30px;font-size:16px;border-radius:8px}
 .mapwrap.tight .zoom button.zf{font-size:10px}
 .mapwrap.tight .legend{left:8px;bottom:8px;padding:3px 8px;font-size:11px;gap:9px}
+.mapwrap.far .legend{top:10px;bottom:auto}
 body.splitting{user-select:none;-webkit-user-select:none}
 svg#map{width:100%;height:100%;display:block;cursor:grab}
 svg#map.drag{cursor:grabbing}
@@ -328,6 +329,7 @@ function drawTiles(){
     o.img.setAttribute("height",(yb-yt+2*ov).toFixed(1))});
 }
 function applyView(){svg.setAttribute("viewBox",vb.join(" "));const u=vb[2]/svg.clientWidth||1;const k=VB0[2]/vb[2];
+  wrap.classList.toggle("far",k<0.06); // 아주 넓게 보면 범례를 지도 위쪽으로 올려 남쪽(제주)을 가리지 않는다
   GEO.dongs.forEach(d=>{const px=Math.sqrt(d.a)/u;d.lab.setAttribute("font-size",10*u);d.lab.setAttribute("y",d.c[1]-9*u);d.lab.style.display=px>46&&k>0.7?"":"none"});
   REGION.areas.forEach(a=>{a.lab.setAttribute("font-size",9.5*u);a.lab.style.display=Math.sqrt(a.a)/u>26?"":"none"});
   GUS.forEach(g=>{guLab[g].setAttribute("font-size",26*u);guLab[g].style.display=k>0.45?"":"none"});
