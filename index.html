@@ -501,7 +501,7 @@ function applyView(){svg.setAttribute("viewBox",vb.join(" "));const u=vb[2]/svg.
   order.forEach(it=>{const r0=it.lr;let r=r0;
     if(state.sel!==it&&clash(r0)){               // 겹치면 라벨을 위·아래로 한 칸씩 밀어 자리를 찾는다
       const hh=r0[3],tx=r0[0],ty=r0[1];
-      for(const s of [1,-1,2,-2]){const c=[tx,ty+s*hh*1.08,r0[2],hh];if(!clash(c)){r=c;break}}
+      for(const s of [1,-1]){const c=[tx,ty+s*hh*1.06,r0[2],hh];if(!clash(c)){r=c;break}}
       if(clash(r)){it.t.style.display="none";if(it.r)it.r.style.display="none";return}}
     placed.push(r);
     if(it.t)it.t.setAttribute("y",(r[1]+r[3]/2+r[3]*0.231).toFixed(2));
