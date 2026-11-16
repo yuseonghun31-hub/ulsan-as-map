@@ -594,14 +594,16 @@ function splitLoad(){let v=NaN;try{v=parseFloat(localStorage.getItem(SPLIT_KEY)|
   splitApply(isFinite(v)?v:SPLIT_DEF,false,false)}
 function splitToggle(){splitApply(splitR<=45?SPLIT_DEF:SPLIT_LIST,true,true)}
 function sBegin(e){if(e.button>0||e.isPrimary===false)return;if(e.target.closest(".sbtn"))return;
-  e.preventDefault();tapMoved=false;SD={id:e.pointerId,y0:e.clientY,h:splitEl.offsetHeight};
+  e.preventDefault();tapMoved=false;
+  const rc0=mainEl.getBoundingClientRect(),sh0=mainEl.clientHeight*(1-splitR/100);
+  SD={id:e.pointerId,y0:e.clientY,h:splitEl.offsetHeight,off:e.clientY-(rc0.top+sh0)};
   try{splitEl.focus({preventScroll:true})}catch(_){}
   try{splitEl.setPointerCapture(e.pointerId)}catch(_){}
   splitEl.classList.add("on");document.body.classList.add("splitting")}
 function sMove(e){if(!SD||e.pointerId!==SD.id)return;
   const rc=mainEl.getBoundingClientRect(),avail=rc.height;if(avail<=0)return;
   e.preventDefault();if(Math.abs(e.clientY-SD.y0)>3)tapMoved=true;
-  splitApply((e.clientY-14-rc.top)/avail*100,false,true)}
+  splitApply((e.clientY-(SD.off||0)-rc.top)/avail*100,false,true)}
 function sEnd(e){if(!SD||e.pointerId!==SD.id)return;const wasTap=!tapMoved;SD=null;
   splitEl.classList.remove("on");document.body.classList.remove("splitting");splitApply(splitR,true,true);
   if(wasTap){const t=Date.now();if(t-tapAt<360){splitApply(SPLIT_DEF,true,true);tapAt=0}else tapAt=t}}
