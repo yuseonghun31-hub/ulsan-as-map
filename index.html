@@ -93,6 +93,11 @@ svg#map.drag{cursor:grabbing}
 .dimgu{opacity:.3}
 .dlabel{fill:var(--muted);text-anchor:middle;pointer-events:none;font-family:var(--font);opacity:.8}
 .glabel{fill:var(--gu-ink);text-anchor:middle;pointer-events:none;font-family:var(--font);font-weight:700;opacity:.42;letter-spacing:.06em}
+/* 어두운 화면에서는 동·시군구 이름이 배경에 묻히지 않게 조금 밝힌다 */
+:root[data-theme="dark"] .dlabel{fill:#b9c6c2;opacity:.7}
+:root[data-theme="dark"] .rlabel{fill:#9aa8a4;opacity:.6}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .dlabel{fill:#b9c6c2;opacity:.7}
+  :root:not([data-theme="light"]) .rlabel{fill:#9aa8a4;opacity:.6}}
 
 /* 핀: 둥근 점 + 얇은 링, 라벨은 캡슐 배지 */
 .pt{cursor:pointer}
