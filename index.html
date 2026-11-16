@@ -227,6 +227,26 @@ h2 span{font-variant-numeric:tabular-nums;font-size:11.5px}
   padding:3px 7px;border-radius:7px;background:var(--accent);color:var(--accent-ink);font-variant-numeric:tabular-nums}
 .badge.done{background:var(--panel-2);color:var(--muted);border:1px solid var(--line);font-weight:600}
 .badge.tel{background:transparent;color:var(--muted);border:1px dashed var(--line);font-weight:600}
+/* 방문일시 배지: 요일별 색 — 라이트는 차분한 딥 톤 + 흰 글씨, 다크는 소프트 파스텔 + 어두운 글씨 */
+:root{--d-mon:#2b4c7e;--d-mon-i:#fff;--d-tue:#0d5a49;--d-tue-i:#fff;--d-wed:#0e6674;--d-wed-i:#fff;
+  --d-thu:#8a4b2a;--d-thu-i:#fff;--d-fri:#6b3554;--d-fri-i:#fff;--d-sat:#475569;--d-sat-i:#fff;--d-sun:#7c3a3a;--d-sun-i:#fff;
+  --d-unv-bg:#e6ebe9;--d-unv-ink:#46564f}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --d-mon:#a9c6e8;--d-mon-i:#0a1418;--d-tue:#7cc0a6;--d-tue-i:#08140f;--d-wed:#8ecfd6;--d-wed-i:#08161a;
+  --d-thu:#d9bd8a;--d-thu-i:#1a1206;--d-fri:#c6b1dc;--d-fri-i:#150f1a;--d-sat:#b3c2d4;--d-sat-i:#0c1318;--d-sun:#e0b0ab;--d-sun-i:#1a0d0c;
+  --d-unv-bg:rgba(255,255,255,.07);--d-unv-ink:#98a5a2}}
+:root[data-theme="dark"]{
+  --d-mon:#a9c6e8;--d-mon-i:#0a1418;--d-tue:#7cc0a6;--d-tue-i:#08140f;--d-wed:#8ecfd6;--d-wed-i:#08161a;
+  --d-thu:#d9bd8a;--d-thu-i:#1a1206;--d-fri:#c6b1dc;--d-fri-i:#150f1a;--d-sat:#b3c2d4;--d-sat-i:#0c1318;--d-sun:#e0b0ab;--d-sun-i:#1a0d0c;
+  --d-unv-bg:rgba(255,255,255,.07);--d-unv-ink:#98a5a2}
+.badge.dow-mon{background:var(--d-mon);color:var(--d-mon-i)}
+.badge.dow-tue{background:var(--d-tue);color:var(--d-tue-i)}
+.badge.dow-wed{background:var(--d-wed);color:var(--d-wed-i)}
+.badge.dow-thu{background:var(--d-thu);color:var(--d-thu-i)}
+.badge.dow-fri{background:var(--d-fri);color:var(--d-fri-i)}
+.badge.dow-sat{background:var(--d-sat);color:var(--d-sat-i)}
+.badge.dow-sun{background:var(--d-sun);color:var(--d-sun-i)}
+.badge.unv{background:var(--d-unv-bg);color:var(--d-unv-ink);border:1px solid var(--line);font-weight:600}
 .gtag{font-size:10.5px;font-weight:600;letter-spacing:-.01em;padding:3px 7px;border-radius:7px;white-space:nowrap}
 .gtag.g-nam{background:var(--tnam-bg);color:var(--tnam-ink)}
 .gtag.g-jung{background:var(--tjung-bg);color:var(--tjung-ink)}
@@ -639,6 +659,12 @@ function themeInit(){let t="";try{t=localStorage.getItem("asmap.theme")||""}catc
   if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);
   else document.documentElement.removeAttribute("data-theme")}
 const GUK={"남구":"nam","중구":"jung","북구":"buk","동구":"dong"};
+// 방문일시 배지 색: 날짜 문자열의 (월)~(일)이나 2026-11-17 같은 날짜에서 요일을 읽는다
+const DOWK={"월":"mon","화":"tue","수":"wed","목":"thu","금":"fri","토":"sat","일":"sun"},DOWA=["sun","mon","tue","wed","thu","fri","sat"];
+function dowKey(d){const s=String(d||"");const m=s.match(/\(([월화수목금토일])\)/);if(m)return DOWK[m[1]];
+  const y=s.match(/^(\d{4})-(\d{2})-(\d{2})/);if(y){const dt=new Date(+y[1],+y[2]-1,+y[3]);if(!isNaN(dt.getTime()))return DOWA[dt.getDay()]}
+  return ""}
+function dowClass(it){if(it.k!=="up")return " done";const k=dowKey(it.date);return k?" dow-"+k:" unv"}
 function whenText(it){if(it.k!=="up")return it.date||"완료";
   const d=isDay(it.date)?it.date:(it.date==="미확정"?"미확정":(it.date||"날짜 미정"));
   const t=/^\d{1,2}:\d{2}$/.test(it.time||"")?it.time:"";
@@ -646,7 +672,7 @@ function whenText(it){if(it.k!=="up")return it.date||"완료";
 // 고객 한 건 = 둥근 카드 한 장: 방문시간 배지 · 동 태그 · 모델 칩 · 이름 · 증상
 function cardRow(host,it){const b=h("button","cardrow "+(it.k==="up"?"up":"done")+(state.sel===it?" sel":""),host);b.type="button";
   const top=h("div","cr-top",b);
-  h("span","badge"+(it.k==="up"?"":" done"),top,whenText(it));
+  h("span","badge"+dowClass(it),top,whenText(it));
   if(it.k==="done"&&it.tel)h("span","badge tel",top,"전화");
   h("span","gtag g-"+(GUK[it.gu]||"etc"),top,it.ld||"동 확인 필요");
   if(it.model)h("span","mtag",top,it.model);
