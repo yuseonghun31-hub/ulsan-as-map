@@ -316,6 +316,14 @@ html.locked,html.locked body{overflow:hidden}
 .gate.chg #pinchg{display:none}
 
 /* ── 넓은 화면: 지도 + 오른쪽 목록 패널 ─────────────────────────────── */
+/* 지도 칸이 낮을 때(목록 크게): 헤더를 한 줄로 접어 지도에 자리를 준다 */
+body.mapsmall header{padding-top:calc(6px + env(safe-area-inset-top,0px));padding-bottom:7px}
+body.mapsmall h1{font-size:15px}
+body.mapsmall .bar{flex-direction:row;flex-wrap:nowrap;overflow-x:auto;margin-top:6px;gap:5px;scrollbar-width:none}
+body.mapsmall .bar::-webkit-scrollbar{display:none}
+body.mapsmall .chiprow{overflow:visible;flex:0 0 auto}
+body.mapsmall button.chip{height:27px;font-size:11.5px;padding:0 10px}
+
 @media (min-width:860px){
   header{right:384px}
   main{--sheet-h:0px}
@@ -571,7 +579,9 @@ function refitSplit(){const W=svg.clientWidth||1,H=svg.clientHeight||1;if(!(W>0&
 function splitApply(r,save,refit){splitR=splitClamp(+r||SPLIT_DEF);
   mainEl.style.setProperty("--map-r",splitR.toFixed(2));splitEl.setAttribute("aria-valuenow",String(Math.round(splitR)));syncSplitBtn();
   setHeadH();const avail=mainEl.clientHeight;
-  if(avail>0)wrap.classList.toggle("tight",avail*splitR/100<200); // 지도 칸이 낮으면 확대·범례를 줄인다
+  if(avail>0){const small=avail*splitR/100<240;      // 지도 칸이 낮으면 확대·범례를 줄이고, 헤더도 한 줄로 접는다
+    wrap.classList.toggle("tight",avail*splitR/100<200);
+    document.body.classList.toggle("mapsmall",small)}
   if(save){try{localStorage.setItem(SPLIT_KEY,splitR.toFixed(1))}catch(e){}}
   if(refit){cancelAnimationFrame(splitRaf);splitRaf=requestAnimationFrame(refitSplit)}}
 function splitLoad(){let v=NaN;try{v=parseFloat(localStorage.getItem(SPLIT_KEY)||"")}catch(e){}
