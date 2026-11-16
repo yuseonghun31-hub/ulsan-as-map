@@ -662,7 +662,8 @@ function drawSide(){const s=document.getElementById("side");s.textContent="";con
   const vis=items.filter(visible);
   // 구 필터가 '전체'면 울산 4개 구 다음에 팀 구역의 다른 시·군(타지역)을 따로 모아 보여준다
   const guList=state.gu==="전체"?GUS.concat([...new Set(vis.map(i=>i.gu).filter(g=>!GUS.includes(g)))]):[state.gu];
-  const upFirst=(a,b)=>(a.k===b.k?0:a.k==="up"?-1:1)
+  const upFirst=(a,b)=>(a.k===b.k?0:a.k==="up"?-1:1)                       // 예정 먼저
+    ||((isDay(a.date)?0:1)-(isDay(b.date)?0:1))                              // 날짜가 정해진 건 먼저, 미확정은 뒤
     ||(isDay(a.date)&&isDay(b.date)?dayNum(a.date)-dayNum(b.date)||String(a.time||"").localeCompare(String(b.time||"")):0)
     ||String(a.name||"").localeCompare(String(b.name||""));
   guList.forEach(g=>{const li=vis.filter(i=>i.gu===g);if(!li.length)return;
