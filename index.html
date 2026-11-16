@@ -75,11 +75,11 @@ main{flex:1;min-height:0;display:flex;flex-direction:column;--map-r:55}
 .mapwrap.tight .legend{left:8px;bottom:8px;padding:3px 8px;font-size:11px;gap:9px}
 body.splitting{user-select:none;-webkit-user-select:none}
 /* 바탕: 네이버 지도. 그림은 그 위에 SVG 한 장으로 겹친다(움직임은 지도가 맡는다) */
-#nmap{position:absolute;inset:0;width:100%;height:100%;background:var(--bg);z-index:0}
+#nmap{position:absolute;inset:0;width:100%;height:100%;background:var(--bg);z-index:0;transform:translateZ(0);backface-visibility:hidden;-webkit-backface-visibility:hidden;will-change:transform}
 svg#map{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1;pointer-events:none;-webkit-tap-highlight-color:transparent}
 svg#map .pt{pointer-events:auto;cursor:pointer}
 /* 어두운 테마: 네이버 지도를 반전시켜 야간 지도처럼. NAVER 로고만 원색으로 되돌린다 */
-:root[data-theme="dark"] #nmap{filter:invert(1) hue-rotate(180deg) brightness(.93) contrast(.9) saturate(.55)}
+:root[data-theme="dark"] #nmap{filter:invert(1) hue-rotate(180deg) brightness(.93) contrast(.9) saturate(.55);will-change:filter}
 :root[data-theme="dark"] #nmap a img{filter:invert(1) hue-rotate(180deg) brightness(1.05) contrast(1.18) saturate(1.45)}
 .mapnote{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:12.5px;color:var(--warn);max-width:82%;text-align:center;line-height:1.5}
 .mapnote[hidden]{display:none}
@@ -94,6 +94,9 @@ svg#map .pt{pointer-events:auto;cursor:pointer}
 #map .donglayer{filter:drop-shadow(0 0 2px rgba(28,44,39,.5))}
 :root[data-theme="dark"] #map .donglayer{filter:drop-shadow(0 0 2px rgba(79,209,181,.45))}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #map .donglayer{filter:drop-shadow(0 0 2px rgba(79,209,181,.45))}}
+/* 지도를 움직이는 동안에는 그림자 필터를 잠시 끈다 — 매 프레임 다시 그리는 비용을 줄여 경계선이 지도에 붙어 따라오게 */
+.mapwrap.moving #map .donglayer{filter:none}
+.mapwrap.moving #map .ulab,.mapwrap.moving #map .glabel{opacity:.45}
 .rlabel{fill:var(--muted);text-anchor:middle;pointer-events:none;font-family:var(--font-body);opacity:.9;paint-order:stroke;stroke:var(--panel);stroke-opacity:.55}
 .ulab{fill:var(--accent);text-anchor:middle;pointer-events:none;font-family:var(--font-display);paint-order:stroke;stroke:var(--panel);stroke-opacity:.75}
 .dimgu{opacity:.35}
@@ -331,10 +334,12 @@ function initMap(){
   try{NMAP=new naver.maps.Map(box,{center:new naver.maps.LatLng(CAM.lat,CAM.lng),zoom:Math.round(CAM.zoom),
     minZoom:6,maxZoom:19,zoomControl:false,scaleControl:false,mapDataControl:false,
     logoControl:true,logoControlOptions:{position:naver.maps.Position.TOP_RIGHT},
-    mapTypeId:naver.maps.MapTypeId.NORMAL});}catch(e){NMAP=null;return false}
-  const upd=()=>{takeCam();queueView()};
+    mapTypeId:naver.maps.MapTypeId.NORMAL,
+    /* 타일이 흐릿하게 겹쳐 떠오르는 페이드를 끄고, 화면 밖 여분 타일을 미리 받아 둔다 */
+    tileTransition:false,tileSpare:4,baseTileOpacity:1});}catch(e){NMAP=null;return false}
+  const upd=()=>{takeCam();movingOn();queueView()};
   ["bounds_changed","center_changed","zoom_changed","size_changed"].forEach(ev=>NMAP.addListener(ev,upd));
-  NMAP.addListener("idle",()=>{takeCam();applyView();prog=false});
+  NMAP.addListener("idle",()=>{takeCam();movingOff();applyView();prog=false});
   NMAP.addListener("dragstart",()=>{if(!prog)camMoved=true});
   NMAP.addListener("click",()=>{if(state.sel){state.sel=null;refresh()}});
   camFail("");applyView();return true;
@@ -366,13 +371,30 @@ function prepareGeo(){
   GEO.dongs.forEach(d=>{md+=convPath(d.d)});            // 동 경계 = 구멍(even-odd)
   MASK.setAttribute("d",md);
 }
+// 지금 지도가 화면에 실제로 보여 주는 자리(경위도 상자)를 세계 픽셀 상자로 돌려준다.
+// 확대·이동 애니메이션 중에도 지도의 실제 뷰포트를 그대로 쓰므로 그림이 지도와 같은 박자로 움직인다.
+function liveBox(){
+  if(NMAP){try{
+    const b=NMAP.getBounds();if(b){
+      const ne=b.getNE?b.getNE():b.getMax(),sw=b.getSW?b.getSW():b.getMin();
+      if(ne&&sw){const p=wpt(sw.lng(),ne.lat()),q=wpt(ne.lng(),sw.lat());   // p=왼쪽 위, q=오른쪽 아래
+        if(isFinite(p[0])&&isFinite(q[1])&&q[0]-p[0]>0&&q[1]-p[1]>0)return [p[0],p[1],q[0]-p[0],q[1]-p[1]]}
+    }}catch(e){}
+  }
+  return null;
+}
+// 지도를 움직이는 동안 무거운 필터를 잠시 끈다(그림이 뒤늦게 따라오는 현상 완화)
+let movT=0;
+function movingOn(){if(!wrap)return;wrap.classList.add("moving");clearTimeout(movT);movT=setTimeout(movingOff,320)}
+function movingOff(){clearTimeout(movT);movT=0;if(wrap)wrap.classList.remove("moving")}
 function applyView(){
   const cw=svg.clientWidth||wrap.clientWidth||0,ch=svg.clientHeight||wrap.clientHeight||0;
   if(!(cw>0&&ch>0))return;
-  const wp=wpt(CAM.lng,CAM.lat),sc=Math.pow(2,ZREF-CAM.zoom);
-  vb=[wp[0]-cw*sc/2,wp[1]-ch*sc/2,cw*sc,ch*sc];
+  const bx=liveBox();
+  if(bx)vb=bx;                            // 지도가 보여 주는 그대로
+  else{const wp=wpt(CAM.lng,CAM.lat),sc0=Math.pow(2,ZREF-CAM.zoom);vb=[wp[0]-cw*sc0/2,wp[1]-ch*sc0/2,cw*sc0,ch*sc0]}
   svg.setAttribute("viewBox",vb.join(" "));
-  const u=sc;                             // 세계 픽셀/화면 픽셀
+  const u=vb[2]/cw;                       // 세계 픽셀/화면 픽셀
   const k=VB0[2]*OUW/vb[2];               // 울산 화면 대비 지금 배율
   GEO.dongs.forEach(d=>{if(!d.wc)return;const px=Math.sqrt(d.a)*OUW/u;
     d.lab.setAttribute("font-size",10*u);d.lab.setAttribute("y",d.wc[1]-9*u);d.lab.style.display=px>46&&k>0.7?"":"none"});
@@ -407,9 +429,14 @@ function fitShown(gu){const b=gu&&gu!=="전체"?W2OLDBOX(guBox(gu)):VB1.slice();
   items.forEach(it=>{if(it.pos&&visible(it))add(it.pos)});
   (RT?((RT.st?[RT.st]:[]).concat(RT.rows.map(r=>r.it))):[]).forEach(s2=>{if(s2&&s2.pos)add(s2.pos)});
   const m=PAD*2;fitBox([x0-m,y0-m,x1-x0+2*m,y1-y0+2*m])}
-function zoomBy(d){if(NMAP){prog=true;NMAP.setZoom(NMAP.getZoom()+d)}else{CAM.zoom=Math.max(6,Math.min(19,CAM.zoom+d));applyView()}}
-document.getElementById("zin").onclick=()=>zoomBy(-1);
-document.getElementById("zout").onclick=()=>zoomBy(1);
+// d=+1 확대(네이버 줌 숫자가 클수록 확대), d=-1 축소. 버튼은 애니메이션 없이 바로 그려 흐린 타일이 남지 않게 한다
+let zoomT=0;
+function zoomBy(d){const z=Math.round((NMAP?NMAP.getZoom():CAM.zoom)+d);
+  if(NMAP){prog=true;movingOn();clearTimeout(zoomT);zoomT=setTimeout(()=>{prog=false},600);
+    NMAP.setZoom(Math.max(6,Math.min(19,z)),false);takeCam();applyView()}
+  else{CAM.zoom=Math.max(6,Math.min(19,z));applyView()}}
+document.getElementById("zin").onclick=()=>zoomBy(1);
+document.getElementById("zout").onclick=()=>zoomBy(-1);
 document.getElementById("zfit").onclick=()=>fitShown(state.gu);
 document.getElementById("zul").onclick=()=>fitUlsan();
 // ── 지도·목록 경계 손잡이: 끌어서 높이 비율 조절 ─────────────────────────
