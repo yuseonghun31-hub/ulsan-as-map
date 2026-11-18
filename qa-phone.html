@@ -4,9 +4,13 @@
 </head><body>
 <iframe id="f" title="울산 AS 지도 (390×844)"></iframe>
 <script>
-// ?theme=dark|light 로 화면 모드를 정하고, 화면·서비스워커 캐시를 피해 항상 최신 index.html 을 연다
-var q = new URLSearchParams(location.search), t = q.get("theme");
-try { if (t === "dark" || t === "light") localStorage.setItem("asmap.theme", t); else localStorage.removeItem("asmap.theme"); } catch (e) {}
+// ?theme=dark|light 로 화면 모드를 정하고, ?split=55 같은 값으로 지도/목록 비율을 맞춘 뒤
+// 화면·서비스워커 캐시를 피해 항상 최신 index.html 을 연다
+var q = new URLSearchParams(location.search), t = q.get("theme"), s = q.get("split");
+try {
+  if (t === "dark" || t === "light") localStorage.setItem("asmap.theme", t); else localStorage.removeItem("asmap.theme");
+  if (s) localStorage.setItem("asmap.split", s); else localStorage.removeItem("asmap.split");
+} catch (e) {}
 document.getElementById("f").src = "index.html?v=" + Date.now();
 </script>
 </body></html>
