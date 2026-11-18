@@ -295,7 +295,6 @@ h2 span{font-variant-numeric:tabular-nums;font-size:11.5px}
 .note{color:var(--muted);font-size:11px;line-height:1.65;margin-top:18px;padding-top:12px;border-top:1px solid var(--line);opacity:.85}
 
 /* ── 경로 추천 패널 ──────────────────────────────────────────────── */
-.rdays{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px}
 .rset{display:flex;gap:8px 14px;flex-wrap:wrap;align-items:center;font-size:11.5px;color:var(--muted);margin-bottom:10px}
 .rset label{display:flex;align-items:center;gap:6px}
 .rset select,.rset input[type=time],.rset input[type=number]{font:inherit;font-size:12.5px;color:var(--ink);
@@ -462,7 +461,7 @@ items.forEach(it=>{const c=it.ld?locate(it.gu,it.ld):null;if(!c){it.pos=null;ret
   const key=it.gu+"/"+it.ld;const i=cnt[key]=(cnt[key]||0)+1;const r=i===1?0:5.2*Math.sqrt(i-1),a=(i-1)*2.39996;
   it.pos=[c[0]+r*Math.cos(a),c[1]+r*Math.sin(a)]});
 const rk={};items.forEach(it=>{if(it.k==="up"&&it.pos){const key=it.gu+"/"+it.ld;it.rank=rk[key]=(rk[key]==null?0:rk[key]+1)}else it.rank=0});
-const state={gu:"전체",mode:"up",sel:null,route:false};
+const state={gu:"전체",mode:"up",sel:null,route:false,day:null};   // day: null=전체 날짜, '11/19(목)' 같은 날짜, 'free'=예약 없는 날(미확정)
 const svg=document.getElementById("map"),wrap=document.getElementById("wrap");
 const B=GEO.box,PAD=14,VB0=[B[0]-PAD,B[1]-PAD,B[2]-B[0]+2*PAD,B[3]-B[1]+2*PAD];
 // 팀 구역(경남·부산) 전체 상자 — '전체' 보기는 경남 전체를 담는다
@@ -488,7 +487,29 @@ function mkPin(it){if(!it.pos)return;const g=el("g",{class:"pt "+it.k,tabindex:"
     it.t.addEventListener("click",dial);it.r.addEventListener("click",dial);
     g.setAttribute("aria-label",(it.name||"")+" "+telShow(it.ph)+" — 이름을 누르면 전화");}
   g.addEventListener("click",e=>{e.stopPropagation();select(it,false)});g.addEventListener("keydown",e=>{if(e.key==="Enter")select(it,false)})}
-function visible(it){return (state.gu==="전체"||it.gu===state.gu)&&(state.mode==="all"||it.k==="up")}
+// ── 상단 날짜 필터: 지도·목록·경로 추천이 같은 날짜를 함께 본다 ────────────
+// 날짜 칩은 예정 건의 날짜들(빠른 날 먼저)과 '예약 없는 날'(미확정)이다.
+const mdOf=d=>String(d||"").replace(/\(\D\)\s*$/,"").trim();          // '11/19(목)' → '11/19'
+function dayList(){const ups=items.filter(i=>i.k==="up");
+  const ds=[...new Set(ups.filter(i=>isDay(i.date)).map(i=>i.date))].sort((a,b)=>dayNum(a)-dayNum(b));
+  return ds.concat("free")}                                              // 경로 추천과 같이 '예약 없는 날'을 늘 둔다
+function dayMatch(it){if(!state.day)return true;
+  if(state.day==="free")return it.k==="up"&&!isDay(it.date);
+  return mdOf(it.date)===mdOf(state.day)}                                // 완료 건(11/12)도 같은 날짜로 맞춘다
+function visible(it){return (state.gu==="전체"||it.gu===state.gu)&&(state.mode==="all"||it.k==="up")&&dayMatch(it)}
+function dayCheck(){if(state.day&&!dayList().includes(state.day))state.day=null}   // 그 날 건이 다 빠지면 전체로
+function routeDay(){const ds=dayList();return state.day&&ds.includes(state.day)?state.day:ds[0]}
+function setDay(d){if(state.route){const t=d||routeDay();if(state.day===t)return;state.day=t}   // 경로 추천에서는 날짜 하나를 늘 고른다
+  else state.day=d&&state.day!==d?d:null;                                                        // 같은 칩을 다시 누르면 전체로
+  state.sel=null;refresh();fitPins()}
+// 고른 날의 핀(경로 추천이면 출발지·경로 위 정차지까지)에 화면을 맞춘다
+function fitPins(){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  const add=p=>{x0=Math.min(x0,p[0]);y0=Math.min(y0,p[1]);x1=Math.max(x1,p[0]);y1=Math.max(y1,p[1])};
+  items.forEach(it=>{if(it.pos&&visible(it))add(it.pos)});
+  if(state.route&&RT)(RT.st?[RT.st]:[]).concat(RT.rows.map(r=>r.it)).forEach(s=>{if(s&&s.pos)add(s.pos)});
+  if(x0>1e9){fitHome();return}
+  const w=Math.max(x1-x0,12),h=Math.max(y1-y0,12),m=Math.max(PAD*2,Math.max(w,h)*0.14),cx=(x0+x1)/2,cy=(y0+y1)/2;
+  fitBox([cx-w/2-m,cy-h/2-m,w+2*m,h+2*m])}
 // ── 배경 지도: 공개 타일(Esri Light/Dark Gray Canvas)을 지금 보이는 범위에 맞춰 깐다 ──
 //    울산 밖(경남·부산 어디든)도 도로·하천·지형이 보인다. 열쇠가 필요 없고, 지도 좌표는
 //    경위도를 그대로 옮긴 등장방형이라 타일(메르카토르)과의 찌그러짐은 무시할 수 있다.
@@ -571,7 +592,8 @@ function applyView(){svg.setAttribute("viewBox",vb.join(" "));const u=vb[2]/svg.
       it.r.setAttribute("y",r[1].toFixed(1));it.r.setAttribute("width",r[2].toFixed(1));
       it.r.setAttribute("height",r[3].toFixed(1));it.r.setAttribute("rx",(r[3]/2).toFixed(1))}});
   sizeRoute(u);queueTiles()}
-function refresh(){GEO.dongs.forEach(d=>d.el.classList.toggle("dimgu",state.gu!=="전체"&&d.g!==state.gu));
+function refresh(){dayCheck();if(state.route&&!state.day)state.day=routeDay();   // 경로 추천은 날짜 하나를 늘 골라 둔다
+  GEO.dongs.forEach(d=>d.el.classList.toggle("dimgu",state.gu!=="전체"&&d.g!==state.gu));
   items.forEach(it=>{if(it.g){it.g.style.display=visible(it)?"":"none";it.g.classList.toggle("sel",state.sel===it);it.g.classList.toggle("unv",it.k==="up"&&it.vs==="bad")}});
   planRoute();drawBar();drawSide();applyView()}
 // 헤더가 지도 위에 떠 있으므로, 맞춤은 헤더 아래 보이는 영역을 기준으로 한다
@@ -679,14 +701,26 @@ document.getElementById("splitBig").addEventListener("click",e=>{e.stopPropagati
 function select(it,center){state.sel=state.sel===it?null:it;if(state.sel&&center&&it.pos){const w=Math.min(vb[2],VB0[2]/5),r=w/vb[2];vb=[it.pos[0]-w/2,it.pos[1]-vb[3]*r/2,w,vb[3]*r];vbDirty=true}refresh();
   if(state.sel){const c=document.querySelector(".card");if(c)c.scrollIntoView({block:"nearest"})}}
 function chip(p,label,n,on,fn,cls){const b=h("button","chip"+(cls?" "+cls:""),p);b.type="button";b.setAttribute("aria-pressed",on?"true":"false");b.append(label);if(n!=null)h("span","n",b,n);b.onclick=fn;return b}
-function drawBar(){const bar=document.getElementById("bar");bar.textContent="";const pool=items.filter(it=>state.mode==="all"||it.k==="up");
+function drawBar(){const bar=document.getElementById("bar");
+  const keep=[...bar.children].map(r=>r.scrollLeft||0);                 // 다시 그려도 칩 줄의 스크롤 위치를 지킨다
+  bar.textContent="";const pool=items.filter(it=>state.mode==="all"||it.k==="up");
   const r1=h("div","chiprow",bar);           // 1줄: 구 필터
   ["전체",...GUS].forEach(g=>chip(r1,g,g==="전체"?pool.length:pool.filter(i=>i.gu===g).length,state.gu===g,()=>{state.gu=g;state.sel=null;refresh();fit(g)}));
   const r2=h("div","chiprow acts",bar);      // 2줄: 보기 방식·도구
   chip(r2,"예정만",items.filter(i=>i.k==="up").length,state.mode==="up",()=>{state.mode="up";refresh()});
   chip(r2,"완료 포함",items.length,state.mode==="all",()=>{state.mode="all";refresh()});
-  chip(r2,"경로 추천",null,state.route,()=>{state.route=!state.route;refresh();if(state.route)fitShown(state.gu)},"act");
+  chip(r2,"경로 추천",null,state.route,()=>{state.route=!state.route;refresh();if(state.route)fitPins()},"act");
   chip(r2,themeNow()==="dark"?"낮으로":"밤으로",null,false,()=>setTheme(themeNow()==="dark"?"light":"dark"),"act");
+  // 3줄: 예약 날짜 — 누르면 그 날 건만 지도·목록에 남기고 화면을 맞춘다(다시 누르면 전체)
+  const r3=h("div","chiprow days",bar);
+  const cnt=d=>items.filter(it=>(state.gu==="전체"||it.gu===state.gu)&&(state.mode==="all"||it.k==="up")&&
+    (d==="free"?it.k==="up"&&!isDay(it.date):mdOf(it.date)===mdOf(d))).length;
+  if(!state.route)chip(r3,"전체",null,state.day===null,()=>setDay(null));   // 경로 추천은 날짜 하나를 고르는 화면이라 '전체'가 없다
+  dayList().forEach(d=>chip(r3,d==="free"?"예약 없는 날":d,cnt(d),state.day===d,()=>setDay(d)));
+  [...bar.children].forEach((r,i)=>{if(keep[i])r.scrollLeft=keep[i]});
+  const on=r3.querySelector('button.chip[aria-pressed="true"]');            // 고른 날짜 칩은 줄 가운데로
+  if(on){const a=r3.getBoundingClientRect(),c=on.getBoundingClientRect();
+    r3.scrollLeft=Math.max(0,r3.scrollLeft+(c.left-a.left)-(a.width-c.width)/2)}
   setHeadH()}
 // ── 밤/낮: 누르면 그 기기에 저장하고, 저장한 적이 없으면 기기(시스템) 다크모드를 따른다
 function themeNow(){const t=document.documentElement.getAttribute("data-theme");if(t==="dark"||t==="light")return t;
@@ -786,9 +820,9 @@ function evalSeq(seq,fx,st){let t=RS.set.t0,prev=st,travel=0,late=0;const rows=[
 function bestIns(seq,it,fx,st){let best=null;for(let p=0;p<=seq.length;p++){const s2=seq.slice(0,p).concat([it],seq.slice(p));const e=evalSeq(s2,fx,st);if(!best||e.cost<best.e.cost)best={e,seq:s2}}return best}
 function planRoute(){RT=null;if(!state.route){drawRouteMap();return}
   const ups=items.filter(i=>i.k==="up");
-  const days=[...new Set(ups.filter(i=>isDay(i.date)).map(i=>i.date))].sort((a,b)=>dayNum(a)-dayNum(b));days.push("free");
-  if(!days.includes(RS.day))RS.day=days[0];
-  const D=RS.day,pl=planOf(D),out=new Set(pl.out),inn=new Set(pl.in),fx={};
+  const days=dayList();
+  const D=routeDay()||"free";RS.day=D;                                   // 상단 날짜 칩과 같은 날을 본다
+  const pl=planOf(D),out=new Set(pl.out),inn=new Set(pl.in),fx={};
   let st=null;const sv=RS.set.start;if(sv.charAt(0)==="@"){const id=sv.slice(1);if(PLACE[id])st={pos:PLACE[id],gu:"",no:id}}else if(sv&&dongBy[sv]){const d=dongBy[sv];st={pos:d.c,gu:d.g,no:"start"}}
   const places=Object.keys(PLACE).filter(id=>id!=="HOME"&&!(st&&st.no===id)).map(id=>({k:"place",no:id,name:PNAME[id]||id,pos:PLACE[id],gu:"",ld:PWHERE[id]||"",model:"",sym:"",date:"",time:""}));
   const fixedAll=ups.filter(i=>i.date===D&&tmin(i.time)!=null);
@@ -857,7 +891,7 @@ document.addEventListener("touchmove",e=>{if(DR)e.preventDefault()},{passive:fal
 document.addEventListener("contextmenu",e=>{if(DR||PD)e.preventDefault()});
 function drawRoute(s){const R=RT;if(!R)return;const box=h("div","rp",s);
   const hd=h("h2",null,box);h("b",null,hd,"경로 추천");const est=R.rows.filter((r,i)=>(i>0||R.st)&&!r.real).length;h("span",null,hd,est?"어림 "+est+"구간 포함":"네이버 길찾기 기준");
-  const dr=h("div","rdays",box);R.days.forEach(d=>chip(dr,d==="free"?"예약 없는 날":d,null,R.day===d,()=>{RS.day=d;refresh()}));
+  // 날짜 고르기는 상단 필터의 날짜 칩으로 옮겼다(같은 줄이 두 번 나오지 않게)
   const f=h("div","rset",box);const lab=t=>{const l=h("label",null,f);h("span",null,l,t);return l};
   const sel=document.createElement("select");lab("출발").appendChild(sel);const o0=h("option",null,sel,"첫 방문지부터");o0.value="";["HOME","OFFICE"].forEach(id=>{const o=h("option",null,sel,PNAME[id]+(PLACE[id]?"":" (좌표 대기 중)"));o.value="@"+id});
   GUS.forEach(g=>{const og=document.createElement("optgroup");og.label=g;sel.appendChild(og);GEO.dongs.filter(d=>d.g===g).map(d=>d.n).sort().forEach(n=>{const o=h("option",null,og,n);o.value=g+"/"+n})});
