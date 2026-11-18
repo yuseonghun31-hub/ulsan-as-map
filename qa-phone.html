@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><title>QA — 휴대폰 크기(390×844)</title>
+<style>html,body{margin:0;background:#20262b;height:100%}iframe{width:390px;height:844px;border:0;display:block;background:#fff}</style>
+</head><body>
+<iframe id="f" title="울산 AS 지도 (390×844)"></iframe>
+<script>
+// ?theme=dark|light 로 화면 모드를 정하고, 화면·서비스워커 캐시를 피해 항상 최신 index.html 을 연다
+var q = new URLSearchParams(location.search), t = q.get("theme");
+try { if (t === "dark" || t === "light") localStorage.setItem("asmap.theme", t); else localStorage.removeItem("asmap.theme"); } catch (e) {}
+document.getElementById("f").src = "index.html?v=" + Date.now();
+</script>
+</body></html>
