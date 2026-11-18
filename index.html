@@ -364,6 +364,9 @@ body.mapsmall h1{font-size:15px}
 body.mapsmall .bar{flex-direction:row;flex-wrap:nowrap;overflow-x:auto;margin-top:6px;gap:5px;scrollbar-width:none}
 body.mapsmall .bar::-webkit-scrollbar{display:none}
 body.mapsmall .chiprow{overflow:visible;flex:0 0 auto}
+/* 한 줄로 접힐 때는 날짜 칩을 구 필터 바로 뒤에 둔다(보기·도구 칩보다 먼저 보이게) */
+body.mapsmall .chiprow.days{order:2}
+body.mapsmall .chiprow.acts{order:3}
 body.mapsmall button.chip{height:27px;font-size:11.5px;padding:0 10px}
 
 @media (min-width:860px){
