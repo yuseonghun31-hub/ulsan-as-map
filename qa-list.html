@@ -805,6 +805,7 @@ function drawSide(){const s=document.getElementById("side");s.textContent="";con
   if(state.route){drawRoute(s);return}
   const vis=items.filter(visible);
   // 구 필터가 '전체'면 팀 구역의 다른 시·군(타지역)도 같은 시간순 줄에 섞여 나온다
+  if(!vis.length){h("div","note",s,"이 조건에 맞는 건이 없습니다. 위에서 구나 날짜 칩을 '전체'로 바꿔 보세요.");return}
   // 구별 섹션 헤더 없이 카드 한 줄 — 예약된 시간이 빠른 순(예정 먼저, 날짜 정해진 건 먼저, 같은 날은 방문시간 순)
   const mins=it=>{const m=String(it.time||"").match(/^(\d{1,2}):(\d{2})$/);return m?(+m[1])*60+ +m[2]:null};
   const dayOrd=d=>{const m=String(d||"").match(/^(\d+)\/(\d+)/);if(!m)return 9e9;   // 해를 넘겨(12월→1월)도 순서가 뒤집히지 않게 가까운 해로 센다
