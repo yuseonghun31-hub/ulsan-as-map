@@ -282,6 +282,15 @@ h2 span{font-variant-numeric:tabular-nums;font-size:11.5px}
   transition:transform .12s ease,background .18s ease}
 .card a:active,.card button:active{transform:scale(.97)}
 .card a.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+/* 상세 카드 머리: 무엇을 연 건지 + 오른쪽 위 ✕ 닫기(터치 44px 이상) */
+.card .chead{display:flex;align-items:center;gap:8px;margin:0 0 3px}
+.card .chead .clab{font-size:11px;font-weight:700;letter-spacing:.02em;color:var(--accent)}
+.card .chead .xclose{margin-left:auto;display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  min-height:44px;min-width:88px;padding:0 14px;border-radius:12px;border:1px solid var(--line);
+  background:var(--panel-2);color:var(--ink);font:inherit;font-size:13.5px;font-weight:700;cursor:pointer;
+  -webkit-tap-highlight-color:transparent}
+.card .chead .xclose:active{transform:scale(.97);background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.card .chead .xclose .xi{font-size:15px;font-weight:700;line-height:1}
 /* 상세 카드 안의 이름·번호도 전화 링크 — 버튼 모양 대신 글자 그대로 둔다 */
 .card .nm a.nmcall{color:inherit;background:none;border:0;padding:0;border-radius:0;font:inherit;
   letter-spacing:inherit;text-decoration:underline;text-decoration-style:dotted;
@@ -470,6 +479,7 @@ const B=GEO.box,PAD=14,VB0=[B[0]-PAD,B[1]-PAD,B[2]-B[0]+2*PAD,B[3]-B[1]+2*PAD];
 // 팀 구역(경남·부산) 전체 상자 — '전체' 보기는 경남 전체를 담는다
 const TB=REGION.box,TPAD=20,VB1=[TB[0]-TPAD,TB[1]-TPAD,TB[2]-TB[0]+2*TPAD,TB[3]-TB[1]+2*TPAD];
 let vb=VB1.slice(),vbDirty=false; // vbDirty: 사용자가 확대·이동해서 화면 맞춤이 아닌 상태
+let selHome=null,selHomeDirty=false; // 상세를 열기 전 지도 화면 — 닫으면 그 화면으로 돌아간다
 const gTiles=el("g",{class:"tiles"},svg),gRegion=el("g",{class:"region"},svg),gShapes=el("g",{class:"donglayer"},svg),gDL=el("g",{},svg),gRL=el("g",{},svg),gGL=el("g",{},svg),gRoute=el("g",{},svg),gPts=el("g",{},svg),gNum=el("g",{},svg);
 REGION.areas.forEach(a=>{a.el=el("path",{d:a.d,class:"reg "+a.g},gRegion);a.lab=el("text",{x:a.c[0],y:a.c[1],class:"rlabel"},gRL);a.lab.textContent=a.n});
 const ULAB=el("text",{x:(B[0]+B[2])/2,y:(B[1]+B[3])/2,class:"ulab"},gGL);ULAB.textContent="울산";
@@ -607,7 +617,7 @@ function fitRect(b){const W=svg.clientWidth||1,H=svg.clientHeight||1,T=Math.min(
   if(w/hh<ar){const nw=hh*ar;x-=(nw-w)/2;w=nw}else{const nh=w/ar;y-=(nh-hh)/2;hh=nh}
   const cx=x+w/2,cy=y+hh/2,m=1.035,w2=w*m,hh2=hh*m,sc=w2/W;
   return[cx-w2/2,cy-hh2/2-T*sc,w2,H*sc]}   // 사방에 살짝 여백을 둬 라벨이 화면 끝에서 잘리지 않게
-function fitBox(b){vb=fitRect(b);vbDirty=false;applyView()}
+function fitBox(b){vb=fitRect(b);vbDirty=false;selHome=null;applyView()}
 function guBox(gu){const ds=GEO.dongs.filter(d=>d.g===gu);let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
   ds.forEach(d=>{const bb=d.el.getBBox();x0=Math.min(x0,bb.x);y0=Math.min(y0,bb.y);x1=Math.max(x1,bb.x+bb.width);y1=Math.max(y1,bb.y+bb.height)});
   return[x0-PAD,y0-PAD,x1-x0+2*PAD,y1-y0+2*PAD]}
@@ -628,6 +638,7 @@ function koreaBox(){if(KOREA)return KOREA;const p=(lng,lat)=>[PXA*lng+PXB,PYA*la
   return KOREA=[Math.min(a[0],b[0]),Math.min(a[1],b[1]),Math.abs(b[0]-a[0]),Math.abs(b[1]-a[1])]}
 function koreaView(){return fitRect(koreaBox())}
 function zoomAt(f,cx,cy){const kv=koreaView(),maxW=kv[2];
+  selHome=null;                                        // 직접 확대·축소하면 닫을 때 되돌릴 화면은 버린다
   const w=Math.min(Math.max(vb[2]*f,VB0[2]/40),maxW);
   if(f>1&&w>=maxW-1e-6){vb=kv.slice();vbDirty=true;applyView();return}   // 더 줄이면 대한민국 전체로 맞춘다
   const r=w/vb[2];vb=[cx-(cx-vb[0])*r,cy-(cy-vb[1])*r,w,vb[3]*r];vbDirty=true;applyView()}
@@ -636,7 +647,7 @@ svg.addEventListener("wheel",e=>{e.preventDefault();const p=toMap(e);zoomAt(e.de
 const ptrs=new Map();let pinch=0,ptr0=null,mdMoved=false;
 svg.addEventListener("pointerdown",e=>{ptrs.set(e.pointerId,[e.clientX,e.clientY]);ptr0=[e.clientX,e.clientY];mdMoved=false;svg.classList.add("drag")});
 window.addEventListener("pointermove",e=>{if(!ptrs.has(e.pointerId))return;const prev=ptrs.get(e.pointerId);const r=svg.getBoundingClientRect();
-  if(ptr0&&Math.hypot(e.clientX-ptr0[0],e.clientY-ptr0[1])>7)mdMoved=true;   // 끌어서 지도를 옮긴 뒤에는 이름표 전화를 막는다
+  if(ptr0&&Math.hypot(e.clientX-ptr0[0],e.clientY-ptr0[1])>7){mdMoved=true;selHome=null}   // 끌어서 지도를 옮긴 뒤에는 이름표 전화를 막고, 되돌릴 화면도 버린다
   if(ptrs.size===1){vb[0]-=(e.clientX-prev[0])/r.width*vb[2];vb[1]-=(e.clientY-prev[1])/r.height*vb[3];vbDirty=true;ptrs.set(e.pointerId,[e.clientX,e.clientY]);applyView()}
   else{ptrs.set(e.pointerId,[e.clientX,e.clientY]);const a=[...ptrs.values()];const d=Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1]);
     if(pinch){const mx=(a[0][0]+a[1][0])/2,my=(a[0][1]+a[1][1])/2;const p=toMap({clientX:mx,clientY:my});zoomAt(pinch/d,p[0],p[1])}pinch=d}});
@@ -701,8 +712,17 @@ splitEl.addEventListener("keydown",e=>{const k=e.key;
   else if(k==="End"){e.preventDefault();splitApply(SPLIT_MAX,true,true)}
   else if(k==="Enter"||k===" "){e.preventDefault();splitToggle()}});
 document.getElementById("splitBig").addEventListener("click",e=>{e.stopPropagation();splitToggle()});
-function select(it,center){state.sel=state.sel===it?null:it;if(state.sel&&center&&it.pos){const w=Math.min(vb[2],VB0[2]/5),r=w/vb[2];vb=[it.pos[0]-w/2,it.pos[1]-vb[3]*r/2,w,vb[3]*r];vbDirty=true}refresh();
-  if(state.sel){const c=document.querySelector(".card");if(c)c.scrollIntoView({block:"nearest"})}}
+function select(it,center){if(state.sel===it){closeSel();return}
+  state.sel=it;
+  if(center&&it.pos){if(!selHome){selHome=vb.slice();selHomeDirty=vbDirty}   // 처음 상세를 열 때의 화면을 기억한다
+    const w=Math.min(vb[2],VB0[2]/5),r=w/vb[2];vb=[it.pos[0]-w/2,it.pos[1]-vb[3]*r/2,w,vb[3]*r];vbDirty=true}
+  refresh();const c=document.querySelector(".card");if(c)c.scrollIntoView({block:"nearest"})}
+// 상세를 닫거나 접는다: 카드의 ✕ 닫기 · 지도 빈 곳 · Esc · 같은 핀/카드를 다시 누를 때
+function closeSel(){if(!state.sel)return;state.sel=null;
+  if(selHome){vb=selHome.slice();vbDirty=selHomeDirty;selHome=null}   // 상세가 확대해 둔 화면을 원래대로
+  refresh()}
+function mapTap(){if(state.sel)closeSel()}                                // 지도 빈 곳(배경) 누르기
+function escClose(e){if(!e||e.key!=="Escape"||!state.sel)return false;closeSel();return true}
 function chip(p,label,n,on,fn,cls){const b=h("button","chip"+(cls?" "+cls:""),p);b.type="button";b.setAttribute("aria-pressed",on?"true":"false");b.append(label);if(n!=null)h("span","n",b,n);b.onclick=fn;return b}
 function drawBar(){const bar=document.getElementById("bar");
   const keep=[...bar.children].map(r=>r.scrollLeft||0);                 // 다시 그려도 칩 줄의 스크롤 위치를 지킨다
@@ -763,7 +783,14 @@ function cardRow(host,it){const b=h("div","cardrow "+(it.k==="up"?"up":"done")+(
   const go=()=>select(it,true);b.addEventListener("click",go);
   b.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go()}});return b}
 function drawSide(){const s=document.getElementById("side");s.textContent="";const it=state.sel;
-  if(it){const c=h("div","card",s);const nm=h("div","nm",c);
+  if(it){const c=h("div","card",s);
+    const hd=h("div","chead",c);h("span","clab",hd,"고객 정보");
+    const xb=h("button","xclose",hd);xb.type="button";
+    h("span","xi",xb,"\u2715");h("span",null,xb,"닫기");
+    xb.setAttribute("aria-label","고객 정보 닫기 — 목록과 지도로 돌아가기");
+    xb.title="닫기 (Esc) · 지도 빈 곳을 눌러도 닫힙니다";
+    xb.onclick=e=>{if(e)e.stopPropagation();closeSel()};
+    const nm=h("div","nm",c);
     if(it.ph){const nl=h("a","nmcall",nm,it.name||"이름 없음");nl.href="tel:"+it.ph;
       nl.title="눌러서 전화 "+telShow(it.ph)}
     else h("span",null,nm,it.name||"이름 없음");
@@ -786,8 +813,9 @@ function drawSide(){const s=document.getElementById("side");s.textContent="";con
   guList.forEach(g=>{const li=vis.filter(i=>i.gu===g);if(!li.length)return;
     const hd=h("h2",null,s);h("b",null,hd,g||"타지역");h("span",null,hd,li.length+"건");
     li.slice().sort(upFirst).forEach(i=>cardRow(s,i))});
-  h("div","note",s,"바탕 지도는 Esri 기본 지도(밝은/어두운 회색)이고, 경남·부산 시군구 경계를 옅게 깔았습니다. 예정 건은 시트 `좌표` 탭의 네이버 좌표에 찍고, 좌표를 못 찾은 건과 완료 건은 주소에 적힌 동의 가운데 부근에 찍습니다. 경계는 행정동 기준이라 신정동처럼 여러 행정동으로 나뉜 곳은 그 중간에 표시됩니다. 주소에 동이 적혀 있지 않은 완료 건은 지도에 없고 목록의 '동 확인 필요'에 있습니다. 고객 이름을 누르면 시트 전화번호 칸의 번호(증상접수 연락처 우선, 없으면 고객기본정보 연락처)로 바로 전화가 걸립니다 — 지도에서는 이름표를 누르면 전화, 점을 누르면 상세가 열립니다.")}
-svg.addEventListener("click",()=>{if(state.sel){state.sel=null;refresh()}});
+  h("div","note",s,"바탕 지도는 Esri 기본 지도(밝은/어두운 회색)이고, 경남·부산 시군구 경계를 옅게 깔았습니다. 예정 건은 시트 `좌표` 탭의 네이버 좌표에 찍고, 좌표를 못 찾은 건과 완료 건은 주소에 적힌 동의 가운데 부근에 찍습니다. 경계는 행정동 기준이라 신정동처럼 여러 행정동으로 나뉜 곳은 그 중간에 표시됩니다. 주소에 동이 적혀 있지 않은 완료 건은 지도에 없고 목록의 '동 확인 필요'에 있습니다. 고객 이름을 누르면 시트 전화번호 칸의 번호(증상접수 연락처 우선, 없으면 고객기본정보 연락처)로 바로 전화가 걸립니다 — 지도에서는 이름표를 누르면 전화, 점을 누르면 상세가 열립니다. 상세 카드는 카드 위 `✕ 닫기`·지도 빈 곳·Esc 키로 닫힙니다.")}
+svg.addEventListener("click",mapTap);
+document.addEventListener("keydown",escClose);
 window.addEventListener("resize",()=>fitHome());
 // ── 경로 추천: 확정 예약은 시간을 고정하고, 그 사이에 미확정 건을 이동 시간이 가장 적게 늘어나는 자리에 끼운다
 // 이동 시간 어림: 지도 1단위=0.03km, 직선→도로 보정 1.35배, 시내 평균 30km/h, 구간마다 주차·출입 3분
