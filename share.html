@@ -1126,9 +1126,10 @@ function sectionOf(cells){
 function statusOf(v){
   const s=String(v||"");
   if(/취소/.test(s)) return "cancel";
-  if(/완료|처리|종결/.test(s)) return "done";
   if(/미확정|대기|미처리|접수만/.test(s)) return "pending";
-  if(/배정|확정|예정|방문/.test(s)) return "up";
+  if(/배정/.test(s)) return "up";                  // MAS '배정완료' = 아직 방문 전
+  if(/처리완료|완료|종결/.test(s)) return "done";
+  if(/확정|예정|방문/.test(s)) return "up";
   return "";
 }
 function buildCoordMap(sheets){
