@@ -633,13 +633,13 @@ function visible(){
     if(S.mode==="up"&&it.k!=="up"&&it.k!=="pending") return false;
     if(S.day){
       if(S.day==="free") return it.k==="pending";
-      return isDay(it)&&it.date.iso===S.day;
+      return it.k==="up"&&isDay(it)&&it.date.iso===S.day;
     }
     return true;
   });
 }
 function dayList(){
-  const ds=[...new Set(S.items.filter(isDay).map(i=>i.date.iso))].sort((a,b)=>dayOrd(a)-dayOrd(b));
+  const ds=[...new Set(S.items.filter(i=>i.k==="up"&&isDay(i)).map(i=>i.date.iso))].sort((a,b)=>dayOrd(a)-dayOrd(b));
   return ds;
 }
 function mins(t){const m=String(t||"").match(/^(\d{1,2}):(\d{2})$/);return m?(+m[1])*60+ +m[2]:null}
@@ -708,7 +708,7 @@ function drawBar(){
 
   const r3=h("div","chiprow days",bar);
   const cntDay=d=>S.items.filter(it=>(S.gu==="전체"||it.gu===S.gu)&&inMode(it)&&
-    (d==="free"?it.k==="pending":(isDay(it)&&it.date.iso===d))).length;
+    (d==="free"?it.k==="pending":(it.k==="up"&&isDay(it)&&it.date.iso===d))).length;
   if(!S.route) chip(r3,"전체 날짜",null,S.day===null,()=>{S.day=null;S.sel=null;renderAll();fitVisible()});
   dayList().forEach(d=>{
     const n=cntDay(d);if(!n) return;
@@ -1396,6 +1396,9 @@ window.addEventListener("resize",()=>{map.invalidateSize();syncHead()});
 /* ── 시작 ─────────────────────────────────────────────────────────── */
 setTimeout(function(){try{map.invalidateSize();syncHead();fitUlsan()}catch(e){}},60);
 renderAll();
+if(/[?&]sample(=|&|$)/.test(location.search)){
+  setTimeout(function(){try{loadSample()}catch(e){}},80);
+}
 })();
 </script>
 </body>
