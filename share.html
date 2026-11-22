@@ -923,7 +923,8 @@ function fitVisible(force){
   if(!pts.length){ if(force) fitUlsan(); return; }
   const b=L.latLngBounds(pts);
   if(b.getNorthEast().equals(b.getSouthWest())){map.setView(pts[0],14,{animate:false});return}
-  map.fitBounds(b,{paddingTopLeft:[26,S.headH+18],paddingBottomRight:[26,26],maxZoom:15,animate:!!force});
+  // 이름표가 오른쪽으로 붙으므로 오른쪽 여유를 넉넉히
+  map.fitBounds(b,{paddingTopLeft:[34,S.headH+20],paddingBottomRight:[86,34],maxZoom:15,animate:!!force});
 }
 
 /* ── 처음 화면 ────────────────────────────────────────────────────── */
