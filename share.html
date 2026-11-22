@@ -1328,8 +1328,8 @@ function loadSampleNow(){
   ];
   S.items=raw.map((r,i)=>{
     const place=resolvePlace(r[2],"");
-    return {k:statusOf(r[8])||"up",no:r[9],name:r[0],addr:r[2],tel:telOf(r[1]),gu:place.gu,dong:place.dong,
-      model:r[3],sym:r[4],note:r[10],date:r[5]?{iso:r[5]}:null,time:r[6],
+    return {k:statusOf(r[7])||"up",no:r[8],name:r[0],addr:r[2],tel:telOf(r[1]),gu:place.gu,dong:place.dong,
+      model:r[3],sym:r[4],note:r[9],date:r[5]?{iso:r[5]}:null,time:r[6],
       pos:place.pos?{lat:place.pos[0],lng:place.pos[1],exact:false}:null,_i:i};
   });
   S.file=null;S.sheet=null;S.sheets=[];S.coordMap=null;S.sample=true;
@@ -1339,7 +1339,10 @@ function loadSampleNow(){
 }
 
 /* ── 렌더 ─────────────────────────────────────────────────────────── */
-function renderAll(){drawBar();drawSide();renderPins();updateAsof();syncHead()}
+function renderAll(){
+  drawBar();drawSide();renderPins();updateAsof();syncHead();
+  const lg=$("#legend");if(lg)lg.hidden=!S.items.length;
+}
 function updateAsof(){
   const a=$("#asof");
   if(!S.items.length){a.textContent=S.sample?"샘플 데이터":"엑셀 파일을 열어 주세요";return}
