@@ -58,6 +58,7 @@
   color-scheme:dark;
 }
 
+[hidden]{display:none!important}
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
 body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.45;
@@ -543,8 +544,10 @@ if(!window.L){
 }
 const ESRI_L="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}";
 const ESRI_D="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}";
+const ESRI_LR="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}";
+const ESRI_DR="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}";
 const map=L.map("map",{zoomControl:false,attributionControl:false}).setView([35.538,129.34],11);
-let tile=null;
+let tile=null,tileRef=null;
 const mArrows=L.layerGroup().addTo(map);
 const mPins=L.layerGroup().addTo(map);
 function themeNow(){
@@ -559,11 +562,14 @@ function setTheme(t){
   if(S.items.length) drawBar();
 }
 function applyTiles(){
-  const url=themeNow()==="dark"?ESRI_D:ESRI_L;
+  const dark=themeNow()==="dark";
   if(tile) map.removeLayer(tile);
-  tile=L.tileLayer(url,{maxZoom:19,maxNativeZoom:16,detectRetina:false,
+  if(tileRef) map.removeLayer(tileRef);
+  tile=L.tileLayer(dark?ESRI_D:ESRI_L,{maxZoom:19,maxNativeZoom:16,detectRetina:false,
     attribution:"Esri, HERE, Garmin, © OpenStreetMap contributors"}).addTo(map);
   tile.setZIndex(1);
+  tileRef=L.tileLayer(dark?ESRI_DR:ESRI_LR,{maxZoom:19,maxNativeZoom:16,detectRetina:false,opacity:.95}).addTo(map);
+  tileRef.setZIndex(2);
 }
 (function themeInit(){
   let t="";try{t=localStorage.getItem("sharemap.theme")||""}catch(e){}
@@ -841,7 +847,7 @@ function footerNote(s){
   n.innerHTML=(
     "이 페이지는 <b>엑셀 파일을 브라우저 안에서만</b> 읽습니다. 파일 내용이나 고객 정보를 서버로 보내거나 저장하지 않고, 창을 닫으면 모두 사라집니다.<br>"+
     "<span class='dim'>지도 위치를 잡을 때만 도로명 주소(고객명·연락처 제외)를 OpenStreetMap Nominatim에 조회하며, 조회 결과는 저장하지 않습니다. "+
-    "아예 막으려면 위 ‘주소 검색 켬’을 눌러 끄면, 동 중심 좌표만으로 표시됩니다.<br>"+
+    "아예 막으려면 ‘주소 검색 켬’을 눌러 끄면(처음 화면에서는 체크 해제) 동 중심 좌표만으로 표시됩니다.<br>"+
     "바탕 지도 © Esri · HERE · Garmin · OpenStreetMap contributors.</span>");
 }
 function drawDetail(s,it){
