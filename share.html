@@ -72,6 +72,9 @@ main{position:absolute;inset:0;overflow:hidden;--map-r:55;--sheet-h:calc((100 - 
 .mapwrap{position:absolute;left:0;right:0;top:0;bottom:calc(var(--sheet-h) - var(--bleed));overflow:hidden;z-index:1;background:var(--bg)}
 #map{position:absolute;inset:0;background:var(--bg)}
 .leaflet-container{background:var(--bg);font-family:var(--font);outline:none}
+.leaflet-tile-pane{filter:saturate(.6) brightness(1.04) contrast(.96)}
+:root[data-theme="dark"] .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) saturate(.5) brightness(.9) contrast(.95)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) saturate(.5) brightness(.9) contrast(.95)}}
 .leaflet-control-attribution{display:none}
 /* 지도 위 부유 컨트롤 */
 .zoom{position:absolute;right:12px;bottom:calc(12px + var(--bleed));display:flex;flex-direction:column;gap:6px;z-index:900}
@@ -350,7 +353,7 @@ body.mapsmall button.chip{height:27px;font-size:11.5px;padding:0 10px}
       <span><i style="background:var(--accent)"></i>예정</span>
       <span><i style="background:var(--done)"></i>완료</span>
       <span><i style="background:var(--d-unv-ink)"></i>미확정</span>
-      <a class="attr" href="https://www.esri.com/en-us/legal/terms/attribution" target="_blank" rel="noopener" title="Esri, HERE, Garmin, © OpenStreetMap contributors">지도 © Esri·OSM</a>
+      <a class="attr" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener" title="© OpenStreetMap contributors">지도 © OpenStreetMap</a>
     </div>
     <div class="zoom">
       <button id="zin" type="button" aria-label="확대">+</button>
@@ -542,12 +545,9 @@ if(!window.L){
   }
   return;
 }
-const ESRI_L="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}";
-const ESRI_D="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}";
-const ESRI_LR="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}";
-const ESRI_DR="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}";
+const TILE_URL="https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 const map=L.map("map",{zoomControl:false,attributionControl:false}).setView([35.538,129.34],11);
-let tile=null,tileRef=null;
+let tile=null;
 const mArrows=L.layerGroup().addTo(map);
 const mPins=L.layerGroup().addTo(map);
 function themeNow(){
@@ -562,14 +562,10 @@ function setTheme(t){
   if(S.items.length) drawBar();
 }
 function applyTiles(){
-  const dark=themeNow()==="dark";
   if(tile) map.removeLayer(tile);
-  if(tileRef) map.removeLayer(tileRef);
-  tile=L.tileLayer(dark?ESRI_D:ESRI_L,{maxZoom:19,maxNativeZoom:16,detectRetina:false,
-    attribution:"Esri, HERE, Garmin, © OpenStreetMap contributors"}).addTo(map);
+  tile=L.tileLayer(TILE_URL,{maxZoom:19,detectRetina:false,
+    attribution:"© OpenStreetMap contributors"}).addTo(map);
   tile.setZIndex(1);
-  tileRef=L.tileLayer(dark?ESRI_DR:ESRI_LR,{maxZoom:19,maxNativeZoom:16,detectRetina:false,opacity:.95}).addTo(map);
-  tileRef.setZIndex(2);
 }
 (function themeInit(){
   let t="";try{t=localStorage.getItem("sharemap.theme")||""}catch(e){}
@@ -848,7 +844,7 @@ function footerNote(s){
     "이 페이지는 <b>엑셀 파일을 브라우저 안에서만</b> 읽습니다. 파일 내용이나 고객 정보를 서버로 보내거나 저장하지 않고, 창을 닫으면 모두 사라집니다.<br>"+
     "<span class='dim'>지도 위치를 잡을 때만 도로명 주소(고객명·연락처 제외)를 OpenStreetMap Nominatim에 조회하며, 조회 결과는 저장하지 않습니다. "+
     "아예 막으려면 ‘주소 검색 켬’을 눌러 끄면(처음 화면에서는 체크 해제) 동 중심 좌표만으로 표시됩니다.<br>"+
-    "바탕 지도 © Esri · HERE · Garmin · OpenStreetMap contributors.</span>");
+    "바탕 지도 © <a href='https://www.openstreetmap.org/copyright' target='_blank' rel='noopener'>OpenStreetMap</a> contributors.</span>");
 }
 function drawDetail(s,it){
   const c=h("div","card",s);
