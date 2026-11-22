@@ -699,7 +699,7 @@ function drawBar(){
 
   const r2=h("div","chiprow acts",bar);
   chip(r2,"예정만",S.items.filter(i=>i.k==="up"||i.k==="pending").length,S.mode==="up",()=>{S.mode="up";S.day=null;S.sel=null;renderAll();fitVisible()});
-  chip(r2,"완료 포함",S.items.length,S.mode==="all",()=>{S.mode="all";renderAll();fitVisible()});
+  chip(r2,"완료 포함",S.items.length,S.mode==="all",()=>{S.mode="all";renderAll();fitVisible();startGeocode()});
   chip(r2,"동선 보기",null,S.route,()=>{
     S.route=!S.route;
     if(S.route&&!S.day){const d=routeDateOf();if(d)S.day=d}
@@ -798,7 +798,8 @@ function drawSide(){
   const upN=S.items.filter(i=>i.k==="up").length, pendN=S.items.filter(i=>i.k==="pending").length;
   const hd=h("h2",null,s);
   h("b",null,hd,"방문 목록");
-  h("span",null,hd,vis.length+"건"+(S.mode==="up"?(pendN?" · 미확정 "+pendN:""):""));
+  const visPend=vis.filter(i=>i.k==="pending").length;
+  h("span",null,hd,vis.length+"건"+(visPend?" · 미확정 "+visPend:""));
   if(!vis.length){
     h("div","note",s,"이 조건에 맞는 건이 없습니다. 위에서 구나 날짜 칩을 '전체'로 바꿔 보세요.");
     footerNote(s);return;
@@ -1083,8 +1084,8 @@ function headerMap(cells){
       for(const syn of FIELDS[f]){
         let sc=0;
         if(n===syn) sc=3;
-        else if(n.startsWith(syn)) sc=2;
-        else if(n.includes(syn)) sc=1;
+        else if(syn.length>=2&&n.startsWith(syn)) sc=2;
+        else if(syn.length>=2&&n.includes(syn)) sc=1;
         if(sc>score){score=sc;field=f}
       }
     }
@@ -1269,7 +1270,8 @@ async function startGeocode(){
   setGeoUI(0,0);
   if(!S.useGeo) return;
   const pri=it=>it.k==="up"?0:it.k==="pending"?1:it.k==="done"?2:3;
-  const need=S.items.filter(i=>i.addr&&(!i.pos||!i.pos.exact)&&roadQuery(i.addr))
+  const need=S.items.filter(i=>i.addr&&(!i.pos||!i.pos.exact)&&roadQuery(i.addr)
+      &&(S.mode==="all"||i.k==="up"||i.k==="pending"))
     .sort((a,b)=>pri(a)-pri(b));
   if(!need.length) return;
   let done=0,fails=0,stopped=false;
