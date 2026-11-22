@@ -72,7 +72,7 @@ main{position:absolute;inset:0;overflow:hidden;--map-r:55;--sheet-h:calc((100 - 
 .mapwrap{position:absolute;left:0;right:0;top:0;bottom:calc(var(--sheet-h) - var(--bleed));overflow:hidden;z-index:1;background:var(--bg)}
 #map{position:absolute;inset:0;background:var(--bg)}
 .leaflet-container{background:var(--bg);font-family:var(--font);outline:none}
-.leaflet-tile-pane{filter:saturate(.6) brightness(1.04) contrast(.96)}
+.leaflet-tile-pane{filter:saturate(.38) brightness(1.05) contrast(.95)}
 :root[data-theme="dark"] .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) saturate(.5) brightness(.9) contrast(.95)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) saturate(.5) brightness(.9) contrast(.95)}}
 .leaflet-control-attribution{display:none}
@@ -839,8 +839,12 @@ function toggleGeo(){
   renderAll();
   if(S.useGeo) startGeocode();
 }
-function footerNote(s){
+function footerNote(s,short){
   const n=h("div","note",s);
+  if(short){
+    n.innerHTML="바탕 지도 © <a href='https://www.openstreetmap.org/copyright' target='_blank' rel='noopener'>OpenStreetMap</a> contributors.";
+    return;
+  }
   n.innerHTML=(
     "이 페이지는 <b>엑셀 파일을 브라우저 안에서만</b> 읽습니다. 파일 내용이나 고객 정보를 서버로 보내거나 저장하지 않고, 창을 닫으면 모두 사라집니다.<br>"+
     "<span class='dim'>지도 위치를 잡을 때만 도로명 주소(고객명·연락처 제외)를 OpenStreetMap Nominatim에 조회하며, 조회 결과는 저장하지 않습니다. "+
@@ -958,7 +962,7 @@ function drawLanding(s){
     "<li><b>위도·경도</b> 위도·경도 열이 있으면 그 좌표를 먼저 씁니다(같은 파일의 <span class='kbd'>좌표</span> 시트도 읽습니다)</li>"+
     "</ul>"+
     "‘<b>📅 11월 23일 (월) 확정 일정</b>’ 같은 날짜 머리글 줄이 있는 표는 그 날짜를 그 아래 건에 붙입니다. ‘미확정’ 묶음은 ‘예약 없는 날’로 모입니다.");
-  footerNote(land);
+  footerNote(land,true);
 }
 
 /* ── 파일 읽기 ────────────────────────────────────────────────────── */
