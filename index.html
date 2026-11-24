@@ -808,12 +808,14 @@ function centerMe(){if(!ME.pos||!svg.clientWidth)return;
   fitBox([ME.pos[0]-w/2,ME.pos[1]-h/2,w,h]);meSize(vb[2]/(svg.clientWidth||1))}
 function meFix(p){if(!p||!p.coords)return;const c=p.coords;if(!isFinite(c.latitude)||!isFinite(c.longitude))return;
   ME.pos=proj(c.longitude,c.latitude);ME.acc=isFinite(c.accuracy)?c.accuracy:0;
+  const wasOn=ME.on;
   ME.on=true;meMake();meShow(true);meSize(vb[2]/(svg.clientWidth||1));meBtnState();meSave(true);
+  if(!wasOn)drawMenu();
   if(ME.row&&state.sel)ME.row.textContent=meDistText(state.sel.pos)||"";
   else if(state.sel&&state.sel.pos&&ME.rowMissing){ME.rowMissing=false;drawSheet()}
   if(ME.fresh){ME.fresh=false;centerMe()}}
 function meStop(){if(ME.watch!=null){try{navigator.geolocation.clearWatch(ME.watch)}catch(e){}ME.watch=null}
-  ME.on=false;meBtnState()}
+  ME.on=false;meBtnState();drawMenu()}
 function meErr(e,silent){ME.watch=null;ME.on=false;meBtnState();
   if(e&&e.code===1){meSave(false);meShow(false)}            // 거부·회수된 권한은 기억하지 않는다
   if(silent)return;
