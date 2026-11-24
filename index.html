@@ -705,10 +705,11 @@ function openList(){state.view="list";refresh();const b=document.getElementById(
 function closeList(){state.view="map";refresh()}
 function syncChrome(){const fab=document.getElementById("listbtn"),n=document.getElementById("listn");
   const cnt=items.filter(visible).length;
-  if(n)n.textContent=String(cnt);
+  const num=state.route&&RT?RT.rows.length:cnt;                        // 경로 추천이면 목록은 그날 동선(정차지) 건수
+  if(n)n.textContent=String(num);
   if(fab)fab.hidden=state.view!=="map"||!!state.sel;                    // 카드가 떠 있을 때는 그림을 가리지 않게 감춘다
   const lv=document.getElementById("listview");if(lv)lv.hidden=state.view!=="list";
-  const lc=document.getElementById("lvcount");if(lc)lc.textContent=cnt+"건"}
+  const lc=document.getElementById("lvcount");if(lc)lc.textContent=(state.route&&RT?"동선 ":"")+num+"건"}
 function select(it,center){if(state.sel===it){closeSel();return}
   state.sel=it;if(state.view==="list")state.view="map";               // 목록에서 고르면 지도로 돌아와 그 자리에 카드를 띄운다
   if(it.pos){if(!selHome){selHome=vb.slice();selHomeDirty=vbDirty}   // 처음 상세를 열 때의 화면을 기억한다
