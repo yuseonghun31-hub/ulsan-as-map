@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>미리보기 390×844</title>
+<style>
+  html,body{margin:0;background:#20262b;font:12px sans-serif;color:#9aa}
+  iframe{display:block;width:390px;height:844px;border:0;background:#0e1316}
+</style>
+</head>
+<body>
+<iframe id="f" title="울산 AS 지도 390px 미리보기"></iframe>
+<script>
+  // 화면 파일이 브라우저 HTTP 캐시(10분)에 남지 않게 매번 다른 주소로 연다
+  document.getElementById('f').src = 'index.html?v=' + Date.now();
+</script>
+</body>
+</html>
