@@ -9,6 +9,10 @@
 </style>
 </head>
 <body>
-<iframe id="f" src="index.html" title="울산 AS 지도 390px 미리보기"></iframe>
+<iframe id="f" title="울산 AS 지도 390px 미리보기"></iframe>
+<script>
+  // 화면 파일이 브라우저 HTTP 캐시(10분)에 남지 않게 매번 다른 주소로 연다
+  document.getElementById('f').src = 'index.html?v=' + Date.now();
+</script>
 </body>
 </html>
