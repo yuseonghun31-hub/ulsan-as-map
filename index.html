@@ -22,6 +22,10 @@
   --bg:#eceeed; --panel:#ffffff; --panel-2:#f5f6f5; --ink:#0e1412; --muted:#69756f; --line:rgba(14,24,20,.10);
   --accent:#0d5a49; --accent-ink:#ffffff; --accent-soft:rgba(13,90,73,.10);
   --done:#93a09b; --warn:#9f561a; --warn-soft:rgba(159,86,26,.12);
+  /* 지도 점 색: 예약된 요일별 — 카드의 방문일시 배지와 같은 계열, 지도 위에서 서로 구분되게 */
+  --p-mon:#5b93e8; --p-tue:#2fb87a; --p-wed:#2ec0d4; --p-thu:#e0a651; --p-fri:#bd8ce6;
+  --p-sat:#93a9c6; --p-sun:#e0675a;
+  --p-free:#ffffff; --p-free-ring:rgba(8,16,13,.5);
   --glass:rgba(255,255,255,.74); --glass-drop:rgba(255,255,255,.42); --glass-line:rgba(255,255,255,.55);
   --sheet:#ffffff;
   --sh-1:0 1px 2px rgba(12,22,18,.05),0 1px 1px rgba(12,22,18,.04);
@@ -105,19 +109,23 @@ svg#map.drag{cursor:grabbing}
 .pt .dot{stroke:var(--panel);stroke-width:2;vector-effect:non-scaling-stroke;
   filter:drop-shadow(0 1px 2px rgba(16,28,24,.28))}
 .pt.up .dot{fill:var(--accent)}
+.pt.up.dow-mon .dot{fill:var(--p-mon)}
+.pt.up.dow-tue .dot{fill:var(--p-tue)}
+.pt.up.dow-wed .dot{fill:var(--p-wed)}
+.pt.up.dow-thu .dot{fill:var(--p-thu)}
+.pt.up.dow-fri .dot{fill:var(--p-fri)}
+.pt.up.dow-sat .dot{fill:var(--p-sat)}
+.pt.up.dow-sun .dot{fill:var(--p-sun)}
+.pt.up.free .dot{fill:var(--p-free);stroke:var(--p-free-ring);stroke-width:1.6}
 .pt.done .dot{fill:var(--done);stroke-width:1.6}
 .pt.sel .dot{stroke:var(--warn);stroke-width:3}
-.pt.unv .dot{fill:var(--panel);stroke:var(--accent);stroke-width:2}
-.pt.unv.sel .dot{stroke:var(--warn);stroke-width:3}
+.pt.up.free.sel .dot{stroke:var(--warn);stroke-width:3}
 .pt .lbl{fill:var(--panel);fill-opacity:.93;stroke:rgba(14,24,20,.10);stroke-width:1;vector-effect:non-scaling-stroke}
 :root[data-theme="dark"] .pt .lbl{stroke:rgba(255,255,255,.09)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pt .lbl{stroke:rgba(255,255,255,.09)}}
 .pt .lbl.sel{fill:var(--warn);fill-opacity:.95;stroke:none}
 .pt text{font-family:var(--font);font-weight:600;fill:var(--ink);letter-spacing:-.01em;pointer-events:none}
-/* 이름표를 누르면 바로 전화 — 글자도 터치를 받게 하고 손가락 커서를 준다 */
-.pt text.call{pointer-events:auto}
-.pt .call{cursor:pointer}
-.pt text.call{text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px}
+/* 이름표는 전화가 아니다 — 점이든 이름표든 누르면 아래 정보란이 열린다 */
 .pt.done text{font-weight:500;fill:var(--muted)}
 .pt.sel text{fill:#fff}
 :root[data-theme="dark"] .pt.sel text{fill:#0b110f}
@@ -151,6 +159,8 @@ svg#map.drag{cursor:grabbing}
   border:1px solid var(--line);border-radius:12px;padding:6px 10px;font-size:11px;color:var(--muted);
   display:flex;gap:4px 10px;align-items:center;flex-wrap:wrap;box-shadow:var(--sh-1);max-width:calc(100% - 118px)}
 .legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:0}
+.legend i.free{background:var(--p-free);box-shadow:inset 0 0 0 1px var(--p-free-ring)}
+.legend .lg-br{flex-basis:100%;height:0}
 .mapwrap.far .legend{top:calc(var(--head-h,148px) + 8px);bottom:auto}
 .mapwrap.tight .zoom{gap:5px;right:10px;bottom:calc(8px + var(--bleed))}
 .mapwrap.tight .zoom button{width:32px;height:32px;font-size:15px;border-radius:10px}
@@ -263,13 +273,8 @@ h2 span{font-variant-numeric:tabular-nums;font-size:11.5px}
 .cr-name{font-size:15.5px;font-weight:650;letter-spacing:-.03em;line-height:1.25;color:var(--ink)}
 .cr-sym{margin-top:3px;font-size:12px;line-height:1.5;color:var(--muted);letter-spacing:-.01em;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-/* 고객 이름 자체가 전화 링크다 — 이름을 누르면 통화, 카드의 다른 곳을 누르면 상세가 열린다 */
+/* 고객 이름은 누르면 아래 정보란이 열린다(전화는 정보란 안에서) */
 .cr-name{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.cr-name a.crcall{color:inherit;font:inherit;letter-spacing:inherit;text-decoration:underline;
-  text-decoration-style:dotted;text-decoration-thickness:1px;text-underline-offset:3px;
-  text-decoration-color:var(--accent);-webkit-tap-highlight-color:transparent}
-.cr-name a.crcall:active{opacity:.55}
-.cr-ph{font-size:11px;line-height:1;opacity:.9}
 
 /* 선택한 건 상세 카드 */
 .card{position:relative;border:1px solid var(--accent);border-radius:16px;padding:14px 14px 12px;margin:2px 0 14px;
@@ -291,10 +296,7 @@ h2 span{font-variant-numeric:tabular-nums;font-size:11.5px}
   -webkit-tap-highlight-color:transparent}
 .card .chead .xclose:active{transform:scale(.97);background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
 .card .chead .xclose .xi{font-size:15px;font-weight:700;line-height:1}
-/* 상세 카드 안의 이름·번호도 전화 링크 — 버튼 모양 대신 글자 그대로 둔다 */
-.card .nm a.nmcall{color:inherit;background:none;border:0;padding:0;border-radius:0;font:inherit;
-  letter-spacing:inherit;text-decoration:underline;text-decoration-style:dotted;
-  text-decoration-thickness:1px;text-underline-offset:3px;text-decoration-color:var(--accent)}
+/* 상세 카드 안의 번호는 전화 링크 — 버튼 모양 대신 글자 그대로 둔다 */
 .card .meta a.tellink{color:var(--ink);font-weight:650;background:none;border:0;padding:0;border-radius:0;
   font-size:inherit;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;
   text-decoration-color:var(--accent)}
@@ -417,7 +419,7 @@ body.mapsmall button.chip{height:27px;font-size:11.5px;padding:0 10px}
 <main>
   <div class="mapwrap" id="wrap">
     <svg id="map" role="img" aria-label="경남·부산 지도 위에 울산 남구·중구·북구·동구 동 경계와 방문 위치"></svg>
-    <div class="legend"><span><i style="background:var(--accent)"></i>예정</span><span><i style="background:var(--done)"></i>완료</span><a class="attr" href="https://www.esri.com/en-us/legal/terms/attribution" target="_blank" rel="noopener" title="Esri, HERE, Garmin, © OpenStreetMap contributors">지도 © Esri·HERE·OSM</a></div>
+    <div class="legend"><span><i style="background:var(--p-mon)"></i>월</span><span><i style="background:var(--p-tue)"></i>화</span><span><i style="background:var(--p-wed)"></i>수</span><span><i style="background:var(--p-thu)"></i>목</span><span><i style="background:var(--p-fri)"></i>금</span><span><i style="background:var(--p-sat)"></i>토</span><span><i style="background:var(--p-sun)"></i>일</span><span class="lg-br"></span><span><i class="free"></i>미예약</span><span><i style="background:var(--done)"></i>완료</span><a class="attr" href="https://www.esri.com/en-us/legal/terms/attribution" target="_blank" rel="noopener" title="Esri, HERE, Garmin, © OpenStreetMap contributors">지도 © Esri·HERE·OSM</a></div>
     <div class="zoom"><button id="zin" aria-label="확대">+</button><button id="zout" aria-label="축소">−</button><div class="zoomrow"><button id="zfit" class="zf" aria-label="경남 전체 보기">전체</button><button id="zul" class="zf" aria-label="울산만 보기">울산</button></div></div>
   </div>
   <div class="splitter" id="splitter" role="separator" aria-orientation="horizontal" aria-controls="wrap" aria-label="지도와 목록 높이 조절 — 끌어서 옮기고, 두 번 누르면 기본 비율" aria-valuemin="18" aria-valuemax="78" aria-valuenow="55" tabindex="0"><span class="sgrip" aria-hidden="true"></span><button class="sbtn" id="splitBig" type="button" aria-pressed="false" title="목록을 크게 보기">목록 크게</button></div>
@@ -450,8 +452,8 @@ const el=(t,a={},p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.
 const h=(t,c,p,txt)=>{const e=document.createElement(t);if(c)e.className=c;if(txt!=null)e.textContent=txt;if(p)p.appendChild(e);return e};
 const dongBy={};GEO.dongs.forEach(d=>dongBy[d.g+"/"+d.n]=d);
 function locate(gu,ld){const adm=(L2A[gu]||{})[ld];if(!adm)return null;const cs=adm.map(n=>dongBy[gu+"/"+n]).filter(Boolean);if(!cs.length)return null;return [cs.reduce((s,d)=>s+d.c[0],0)/cs.length,cs.reduce((s,d)=>s+d.c[1],0)/cs.length]}
-// ── 전화: 시트 `전화번호`(증상접수 연락처 우선)를 tel: 로 바로 건다 ────────────
-//    번호가 비었거나 '-'·전산 더미값처럼 쓸 수 없으면 아무 동작도 하지 않는다.
+// ── 전화: 시트 `전화번호`(증상접수 연락처 우선)를 정보란의 번호·통화 버튼에서 tel: 로 건다 ────
+//    번호가 비었거나 '-'·전산 더미값처럼 쓸 수 없으면 아무 링크도 만들지 않는다.
 function telOf(v){const parts=String(v==null?"":v).split(/[,;/|·\n]+/);
   for(const p0 of parts){let d=String(p0||"").replace(/[^0-9]/g,"");if(!d)continue;
     if(d.length>11&&d.slice(0,2)==="82")d="0"+d.slice(2);
@@ -462,7 +464,6 @@ function telShow(d){const s=String(d||"");
   if(s.length===11)return s.slice(0,3)+"-"+s.slice(3,7)+"-"+s.slice(7);
   if(s.length===10)return s.slice(0,3)+"-"+s.slice(3,6)+"-"+s.slice(6);
   return s}
-function callNumber(d){if(!d)return;try{location.href="tel:"+d}catch(e){}}
 // 항목 통합
 let items=[];
 UP.forEach(r=>items.push({k:"up",date:r[0],time:r[1],gu:r[2],name:r[3],ld:r[4],addr:r[5],model:r[6],sym:r[7],no:r[8],ph:""}));
@@ -485,20 +486,20 @@ REGION.areas.forEach(a=>{a.el=el("path",{d:a.d,class:"reg "+a.g},gRegion);a.lab=
 const ULAB=el("text",{x:(B[0]+B[2])/2,y:(B[1]+B[3])/2,class:"ulab"},gGL);ULAB.textContent="울산";
 GEO.dongs.forEach(d=>{d.el=el("path",{d:d.d,class:"dongshape "+GCLS[d.g]},gShapes);d.lab=el("text",{x:d.c[0],y:d.c[1],class:"dlabel"},gDL);d.lab.textContent=d.n});
 const guLab={};GUS.forEach(g=>{const ds=GEO.dongs.filter(d=>d.g===g);const A=ds.reduce((s,d)=>s+d.a,0);const x=ds.reduce((s,d)=>s+d.c[0]*d.a,0)/A,y=ds.reduce((s,d)=>s+d.c[1]*d.a,0)/A;guLab[g]=el("text",{x,y,class:"glabel"},gGL);guLab[g].textContent=g});
+// 요일 키: 날짜 문자열의 (월)~(일)이나 2026-11-17 같은 날짜에서 요일을 읽는다 — 지도 점 색과 배지 색이 같이 쓴다
+const DOWK={"월":"mon","화":"tue","수":"wed","목":"thu","금":"fri","토":"sat","일":"sun"},DOWA=["sun","mon","tue","wed","thu","fri","sat"];
 items.forEach(it=>{mkPin(it)});
+// 지도 점: 예약된 요일별 색, 예약이 없는(미확정) 건은 흰색, 완료 건은 회색
+function pinCls(it){if(it.k!=="up")return "pt done";const k=dowKey(it.date);return "pt up "+(k?"dow-"+k:"free")}
 // 핀 하나: 투명한 터치 원 + 둥근 점 + 캡슐 라벨(rect) + 이름(text)
-function mkPin(it){if(!it.pos)return;const g=el("g",{class:"pt "+it.k,tabindex:"0"},gPts);
+function mkPin(it){if(!it.pos)return;const g=el("g",{class:pinCls(it),tabindex:"0"},gPts);
   it.hit=el("circle",{class:"hit",cx:it.pos[0],cy:it.pos[1]},g);
   it.c=el("circle",{class:"dot",cx:it.pos[0],cy:it.pos[1]},g);
   it.r=el("rect",{class:"lbl",x:0,y:0,width:0,height:0,rx:0},g);
   it.t=el("text",{x:it.pos[0],y:it.pos[1]},g);it.t.textContent=it.name;it.g=g;it.lw=0;
   try{it.t.setAttribute("font-size","12");const w=it.t.getComputedTextLength&&it.t.getComputedTextLength();
     if(typeof w==="number"&&isFinite(w)&&w>0)it.lw=w}catch(e){}
-  if(it.ph){                       // 지도에서 이름표를 누르면 전화, 점(원)을 누르면 상세
-    it.t.setAttribute("class","call");it.r.setAttribute("class","lbl call");
-    const dial=e=>{e.stopPropagation();if(mdMoved)return;callNumber(it.ph)};
-    it.t.addEventListener("click",dial);it.r.addEventListener("click",dial);
-    g.setAttribute("aria-label",(it.name||"")+" "+telShow(it.ph)+" — 이름을 누르면 전화");}
+  g.setAttribute("aria-label",(it.name||"")+(it.ph?" "+telShow(it.ph):"")+" — 고객 정보 열기");
   g.addEventListener("click",e=>{e.stopPropagation();select(it,false)});g.addEventListener("keydown",e=>{if(e.key==="Enter")select(it,false)})}
 // ── 상단 날짜 필터: 지도·목록·경로 추천이 같은 날짜를 함께 본다 ────────────
 // 날짜 칩은 예정 건의 날짜들(빠른 날 먼저)과 '예약 없는 날'(미확정)이다.
@@ -601,13 +602,13 @@ function applyView(){svg.setAttribute("viewBox",vb.join(" "));const u=vb[2]/svg.
       if(clash(r)){it.t.style.display="none";if(it.r)it.r.style.display="none";return}}
     placed.push(r);
     if(it.t)it.t.setAttribute("y",(r[1]+r[3]/2+r[3]*0.231).toFixed(2));
-    if(it.r){it.r.setAttribute("class","lbl"+(state.sel===it?" sel":"")+(it.ph?" call":""));it.r.setAttribute("x",r[0].toFixed(1));
+    if(it.r){it.r.setAttribute("class","lbl"+(state.sel===it?" sel":""));it.r.setAttribute("x",r[0].toFixed(1));
       it.r.setAttribute("y",r[1].toFixed(1));it.r.setAttribute("width",r[2].toFixed(1));
       it.r.setAttribute("height",r[3].toFixed(1));it.r.setAttribute("rx",(r[3]/2).toFixed(1))}});
   sizeRoute(u);queueTiles()}
 function refresh(){dayCheck();if(state.route&&!state.day)state.day=routeDay();   // 경로 추천은 날짜 하나를 늘 골라 둔다
   GEO.dongs.forEach(d=>d.el.classList.toggle("dimgu",state.gu!=="전체"&&d.g!==state.gu));
-  items.forEach(it=>{if(it.g){it.g.style.display=visible(it)?"":"none";it.g.classList.toggle("sel",state.sel===it);it.g.classList.toggle("unv",it.k==="up"&&it.vs==="bad")}});
+  items.forEach(it=>{if(it.g){it.g.style.display=visible(it)?"":"none";it.g.classList.toggle("sel",state.sel===it)}});
   planRoute();drawBar();drawSide();applyView()}
 // 헤더가 지도 위에 떠 있으므로, 맞춤은 헤더 아래 보이는 영역을 기준으로 한다
 function setHeadH(){const h=document.getElementById("head");if(h)document.documentElement.style.setProperty("--head-h",(h.offsetHeight||0)+"px")}
@@ -754,8 +755,7 @@ function themeInit(){let t="";try{t=localStorage.getItem("asmap.theme")||""}catc
   if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);
   else document.documentElement.removeAttribute("data-theme")}
 const GUK={"남구":"nam","중구":"jung","북구":"buk","동구":"dong"};
-// 방문일시 배지 색: 날짜 문자열의 (월)~(일)이나 2026-11-17 같은 날짜에서 요일을 읽는다
-const DOWK={"월":"mon","화":"tue","수":"wed","목":"thu","금":"fri","토":"sat","일":"sun"},DOWA=["sun","mon","tue","wed","thu","fri","sat"];
+// 방문일시 배지 색 — 요일 키(DOWK)는 위쪽에서 지도 점 색과 같이 쓰려고 먼저 만든다
 function dowKey(d){const s=String(d||"");const m=s.match(/\(([월화수목금토일])\)/);if(m)return DOWK[m[1]];
   const y=s.match(/^(\d{4})-(\d{2})-(\d{2})/);if(y){const dt=new Date(+y[1],+y[2]-1,+y[3]);if(!isNaN(dt.getTime()))return DOWA[dt.getDay()]}
   return ""}
@@ -765,7 +765,7 @@ function whenText(it){if(it.k!=="up")return it.date||"완료";
   const t=/^\d{1,2}:\d{2}$/.test(it.time||"")?it.time:"";
   return (d+" "+(t||"")).trim()}
 // 고객 한 건 = 둥근 카드 한 장: 방문시간 배지 · 동 태그 · 모델 칩 · 이름 · 증상
-// 이름을 누르면 바로 전화(tel:), 카드의 다른 곳을 누르면 상세가 열린다
+// 이름을 눌러도 전화가 걸리지 않는다 — 카드 어디를 눌러도 아래 정보란이 열리고, 전화는 그 안에서 건다
 function cardRow(host,it){const b=h("div","cardrow "+(it.k==="up"?"up":"done")+(state.sel===it?" sel":""),host);
   b.tabIndex=0;b.setAttribute("role","button");
   const top=h("div","cr-top",b);
@@ -774,11 +774,7 @@ function cardRow(host,it){const b=h("div","cardrow "+(it.k==="up"?"up":"done")+(
   h("span","gtag g-"+(GUK[it.gu]||"etc"),top,it.ld||"동 확인 필요");
   if(it.model)h("span","mtag",top,it.model);
   const nr=h("div","cr-name",b);
-  if(it.ph){const a=h("a","crcall",nr,it.name||"이름 없음");a.href="tel:"+it.ph;
-    a.title="눌러서 전화 "+telShow(it.ph);a.setAttribute("aria-label",(it.name||"고객")+" "+telShow(it.ph)+" 전화 걸기");
-    h("span","cr-ph",a,"\uD83D\uDCDE");
-    a.addEventListener("click",e=>e.stopPropagation())}
-  else h("span",null,nr,it.name||"이름 없음");
+  h("span",null,nr,it.name||"이름 없음");
   if(it.sym)h("div","cr-sym",b,it.sym);
   const go=()=>select(it,true);b.addEventListener("click",go);
   b.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go()}});return b}
@@ -791,12 +787,10 @@ function drawSide(){const s=document.getElementById("side");s.textContent="";con
     xb.title="닫기 (Esc) · 지도 빈 곳을 눌러도 닫힙니다";
     xb.onclick=e=>{if(e)e.stopPropagation();closeSel()};
     const nm=h("div","nm",c);
-    if(it.ph){const nl=h("a","nmcall",nm,it.name||"이름 없음");nl.href="tel:"+it.ph;
-      nl.title="눌러서 전화 "+telShow(it.ph)}
-    else h("span",null,nm,it.name||"이름 없음");
+    h("span",null,nm,it.name||"이름 없음");
     h("span","pill"+(it.k==="up"?" up":""),nm,it.k==="up"?"예정":(it.tel?"전화처리":"완료"));
     h("div","meta",c,(it.k==="up"?it.date+" "+it.time:it.date+" 완료")+" · "+it.gu+" "+(it.ld||"동 확인 필요")+" · "+it.model);
-    if(it.ph){const pw=h("div","meta",c,"전화 ");const pa=h("a","tellink",pw,telShow(it.ph));pa.href="tel:"+it.ph}
+    if(it.ph){const pw=h("div","meta",c,"전화 ");const pa=h("a","tellink",pw,telShow(it.ph));pa.href="tel:"+it.ph;pa.setAttribute("aria-label",telShow(it.ph)+" 전화 걸기")}
     if(it.sym)h("div",null,c,it.sym);if(it.addr)h("div","meta",c,it.addr);
     const a=h("div","acts",c);
     if(it.ph){const ca=h("a","primary callnow",a,"\uD83D\uDCDE 전화 걸기 "+telShow(it.ph));ca.href="tel:"+it.ph}
@@ -820,7 +814,7 @@ function drawSide(){const s=document.getElementById("side");s.textContent="";con
         ||((mins(a)==null)-(mins(b)==null))||((mins(a)||0)-(mins(b)||0)):0)       // 같은 날은 방문시간 오름차순(시간 없는 건 뒤)
       ||String(a.name||"").localeCompare(String(b.name||""))};
   vis.slice().sort(byTime).forEach(i=>cardRow(s,i));
-  h("div","note",s,"바탕 지도는 Esri 기본 지도(밝은/어두운 회색)이고, 경남·부산 시군구 경계를 옅게 깔았습니다. 예정 건은 시트 `좌표` 탭의 네이버 좌표에 찍고, 좌표를 못 찾은 건과 완료 건은 주소에 적힌 동의 가운데 부근에 찍습니다. 경계는 행정동 기준이라 신정동처럼 여러 행정동으로 나뉜 곳은 그 중간에 표시됩니다. 주소에 동이 적혀 있지 않은 완료 건은 지도에 없고 목록의 '동 확인 필요'에 있습니다. 고객 이름을 누르면 시트 전화번호 칸의 번호(증상접수 연락처 우선, 없으면 고객기본정보 연락처)로 바로 전화가 걸립니다 — 지도에서는 이름표를 누르면 전화, 점을 누르면 상세가 열립니다. 상세 카드는 카드 위 `✕ 닫기`·지도 빈 곳·Esc 키로 닫힙니다.")}
+  h("div","note",s,"바탕 지도는 Esri 기본 지도(밝은/어두운 회색)이고, 경남·부산 시군구 경계를 옅게 깔았습니다. 지도 점 색은 예약된 요일마다 달고(왼쪽 아래 범례), 예약이 아직 없는 건은 흰 점, 완료 건은 회색 점입니다. 예정 건은 시트 `좌표` 탭의 네이버 좌표에 찍고, 좌표를 못 찾은 건과 완료 건은 주소에 적힌 동의 가운데 부근에 찍습니다. 경계는 행정동 기준이라 신정동처럼 여러 행정동으로 나뉜 곳은 그 중간에 표시됩니다. 주소에 동이 적혀 있지 않은 완료 건은 지도에 없고 목록의 '동 확인 필요'에 있습니다. 고객 이름을 누르면 전화가 걸리지 않고 아래 정보란에 그 건의 카드가 열립니다 — 전화는 그 카드의 번호나 `📞 전화 걸기` 버튼을 눌러야 걸립니다. 정보 카드는 카드 위 `✕ 닫기`·지도 빈 곳·Esc 키로 닫힙니다.")}
 svg.addEventListener("click",mapTap);
 document.addEventListener("keydown",escClose);
 window.addEventListener("resize",()=>fitHome());
