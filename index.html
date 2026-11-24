@@ -298,7 +298,7 @@ h2 span{font-variant-numeric:tabular-nums;font-size:11.5px}
 @keyframes cardin{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
 .card{position:relative;border:1px solid var(--line);border-radius:20px;padding:12px 14px 14px;margin:0;
   display:flex;flex-direction:column;gap:5px;background:var(--sheet);
-  box-shadow:var(--sh-3);pointer-events:auto;max-height:min(64vh,540px);overflow-y:auto;
+  box-shadow:var(--sh-3);pointer-events:auto;max-height:min(58vh,480px);overflow-y:auto;
   -webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .card .kv{display:flex;gap:8px;font-size:12.5px;line-height:1.45;letter-spacing:-.01em}
 .card .kv b{flex:0 0 auto;min-width:30px;color:var(--muted);font-weight:600}
@@ -486,7 +486,7 @@ DONE.forEach(r=>items.push({k:"done",date:r[0],gu:r[1],name:r[2],ld:r[3],model:r
 // 같은 동 안에서는 나선형으로 퍼뜨려 겹치지 않게 둔다 (동 단위 위치)
 const cnt={};
 items.forEach(it=>{const c=it.ld?locate(it.gu,it.ld):null;if(!c){it.pos=null;return}
-  const key=it.gu+"/"+it.ld;const i=cnt[key]=(cnt[key]||0)+1;const r=i===1?0:5.2*Math.sqrt(i-1),a=(i-1)*2.39996;
+  const key=it.gu+"/"+it.ld;const i=cnt[key]=(cnt[key]||0)+1;const r=i===1?0:7.5*Math.sqrt(i-1),a=(i-1)*2.39996;
   it.pos=[c[0]+r*Math.cos(a),c[1]+r*Math.sin(a)]});
 const rk={};items.forEach(it=>{if(it.k==="up"&&it.pos){const key=it.gu+"/"+it.ld;it.rank=rk[key]=(rk[key]==null?0:rk[key]+1)}else it.rank=0});
 const state={gu:"전체",mode:"up",sel:null,route:false,day:null,view:"map"};   // view: map=지도 전체 화면, list=목록 오버레이
@@ -602,7 +602,7 @@ function applyView(){svg.setAttribute("viewBox",vb.join(" "));const u=vb[2]/svg.
   ULAB.setAttribute("x",(B[0]+B[2])/2);ULAB.setAttribute("y",B[3]+12*u);ULAB.setAttribute("font-size",12*u);ULAB.style.display=k<0.45?"":"none";
   // 점만 크게 깔고, 이름표는 충분히 줌인(z≥14)했거나 그 점을 골랐을 때만 보여 준다
   items.forEach(it=>{if(!it.g)return;const up=it.k==="up";const f=(up?11:10)*u;
-    it.c.setAttribute("r",(up?6.5:4)*u);if(it.hit)it.hit.setAttribute("r",(up?19:11)*u);
+    it.c.setAttribute("r",(up?6.5:4)*u);if(it.hit)it.hit.setAttribute("r",(up?(zl>=13?19:16):11)*u);
     it.on=state.sel===it||zl>=ZL_NAMES;
     it.t.setAttribute("font-size",f);
     it.t.style.display=it.on?"":"none";if(it.r)it.r.style.display=it.on?"":"none";
@@ -707,8 +707,12 @@ function syncChrome(){const fab=document.getElementById("listbtn"),n=document.ge
   const lc=document.getElementById("lvcount");if(lc)lc.textContent=cnt+"건"}
 function select(it,center){if(state.sel===it){closeSel();return}
   state.sel=it;if(state.view==="list")state.view="map";               // 목록에서 고르면 지도로 돌아와 그 자리에 카드를 띄운다
-  if(center&&it.pos){if(!selHome){selHome=vb.slice();selHomeDirty=vbDirty}   // 처음 상세를 열 때의 화면을 기억한다
-    const w=Math.min(vb[2],VB0[2]/6),r=w/vb[2];vb=[it.pos[0]-w/2,it.pos[1]-vb[3]*r*0.34,w,vb[3]*r];vbDirty=true}
+  if(it.pos){if(!selHome){selHome=vb.slice();selHomeDirty=vbDirty}   // 처음 상세를 열 때의 화면을 기억한다
+    if(center){const w=Math.min(vb[2],VB0[2]/6),r=w/vb[2];vb=[it.pos[0]-w/2,it.pos[1]-vb[3]*r*0.34,w,vb[3]*r];vbDirty=true}
+    else{const fy=(it.pos[1]-vb[1])/vb[3],fx=(it.pos[0]-vb[0])/vb[2];       // 카드에 가리지 않게 그 점을 위·가운데로 올린다
+      if(fy>0.45)vb[1]+=it.pos[1]-(vb[1]+vb[3]*0.3);
+      if(fx<0.18||fx>0.82)vb[0]+=it.pos[0]-(vb[0]+vb[2]*0.5);
+      if(fy>0.45||fx<0.18||fx>0.82)vbDirty=true}}
   closeMenu();refresh()}
 // 상세 카드를 닫는다: 카드의 ✕ 닫기 · 지도 빈 곳 · Esc · 같은 점을 다시 누를 때
 function closeSel(){if(!state.sel)return;state.sel=null;
@@ -984,7 +988,7 @@ function rebuild(){
   items.forEach(it=>{if(it.k==="up"){it.saddr=it.addr}
     if(it.ld==null)it.ld=ldOf(it.gu,it.addr||"",it.no);
     const gx=it.k==="up"?GEOX[it.no]:null,c=gx||(it.ld?locate(it.gu,it.ld):null);it.exact=!!gx;if(!c){it.pos=null;it.rank=0;return}
-    const key=gx?"@"+Math.round(gx[0])+","+Math.round(gx[1]):it.gu+"/"+it.ld;const i=cnt[key]=(cnt[key]||0)+1;const r=i===1?0:(gx?3:5.2)*Math.sqrt(i-1),a=(i-1)*2.39996;it.pos=[c[0]+r*Math.cos(a),c[1]+r*Math.sin(a)];
+    const key=gx?"@"+Math.round(gx[0])+","+Math.round(gx[1]):it.gu+"/"+it.ld;const i=cnt[key]=(cnt[key]||0)+1;const r=i===1?0:(gx?3:7.5)*Math.sqrt(i-1),a=(i-1)*2.39996;it.pos=[c[0]+r*Math.cos(a),c[1]+r*Math.sin(a)];
     it.rank=it.k==="up"?(rk[key]=(rk[key]==null?0:rk[key]+1)):0});
   gPts.textContent="";
 items.forEach(it=>{mkPin(it)});
