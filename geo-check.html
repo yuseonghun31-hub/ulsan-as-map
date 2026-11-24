@@ -14,6 +14,9 @@
   // 검증용 임시 페이지 — index.html 을 390×844 틀에 넣고, 위치만 흉내 낸다.
   //   ?mode=click (기본) 단추를 눌러 켜는 길 / ?mode=auto 열 때 조용히 켜지는 길 / ?mode=deny 권한 거부
   var MODE = new URLSearchParams(location.search).get('mode') || 'click';
+  var AT = new URLSearchParams(location.search).get('at') || 'ulsan';
+  // ulsan: 울산 남구 중심 / yangsan: 거주지(경남 양산시 물금읍) / busan: 사무실(부산 강서구)
+  var P = { ulsan: [35.5384, 129.3265], yangsan: [35.3100, 128.9800], busan: [35.1900, 128.9400] }[AT] || [35.5384, 129.3265];
   var DENY = MODE === 'deny';
   try {
     if (MODE === 'auto') localStorage.setItem('asmap.geo', '1');
@@ -21,7 +24,7 @@
   } catch (e) {}
   var ANSWER = DENY ? 'err({code:1,message:"User denied Geolocation"})' : 'ok(pos)';
   var STUB = '<script>(function(){'
-    + 'var pos={coords:{latitude:35.5384,longitude:129.3265,accuracy:24,heading:null,speed:null,altitude:null},timestamp:Date.now()};'
+    + 'var pos={coords:{latitude:' + P[0] + ',longitude:' + P[1] + ',accuracy:24,heading:null,speed:null,altitude:null},timestamp:Date.now()};'
     + 'var g={getCurrentPosition:function(ok,err){setTimeout(function(){' + ANSWER + '},140)},'
     + 'watchPosition:function(ok,err){setTimeout(function(){' + ANSWER + '},140);return 7},'
     + 'clearWatch:function(){}};'
