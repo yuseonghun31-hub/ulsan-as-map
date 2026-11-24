@@ -167,6 +167,32 @@ svg#map.drag{cursor:grabbing}
 .zoom button.zf{font-size:11.5px;font-weight:600;letter-spacing:-.04em}
 .zoomrow{display:flex;gap:8px}
 .zoomrow button{flex:0 0 auto}
+/* 내 위치 단추 — 같은 유리 질감, 켜져 있으면 파란 기운 */
+.zoom button.zloc{display:flex;align-items:center;justify-content:center;color:var(--ink)}
+.zoom button.zloc svg{width:19px;height:19px;display:block}
+.zoom button.zloc[aria-pressed="true"]{color:#1d4ed8;background:rgba(59,130,246,.20);border-color:rgba(59,130,246,.45)}
+.zoom button.zloc[aria-pressed="true"] svg{filter:drop-shadow(0 0 5px rgba(59,130,246,.5))}
+:root[data-theme="light"] .zoom button.zloc[aria-pressed="true"]{background:rgba(59,130,246,.16);border-color:rgba(59,130,246,.42)}
+:root[data-theme="dark"] .zoom button.zloc[aria-pressed="true"]{color:#93c5fd}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .zoom button.zloc[aria-pressed="true"]{color:#93c5fd}}
+/* 지도 위 내 위치: 선명한 파란 점 + 흰 테두리 + 은은한 정확도 반경·펄스 (크기는 화면 기준으로 보정) */
+.me,.me *{pointer-events:none}
+.me .halo{fill:#3b82f6;fill-opacity:.10;stroke:rgba(59,130,246,.34);stroke-width:1;vector-effect:non-scaling-stroke}
+.me .pulse{fill:#3b82f6;fill-opacity:.20;transform-box:fill-box;transform-origin:center}
+.me .ring{fill:#fff;filter:drop-shadow(0 1px 2.5px rgba(0,0,0,.32))}
+.me .dot2{fill:#3b82f6}
+@media (prefers-reduced-motion:no-preference){
+  .me .pulse{animation:mePulse 2.6s cubic-bezier(.22,.61,.36,1) infinite}
+}
+@keyframes mePulse{0%{transform:scale(.5);opacity:.6}70%{transform:scale(1.6);opacity:0}100%{transform:scale(1.6);opacity:0}}
+/* 안내 토스트 — 지도 아래 시트 위에 잠깐 떴다 사라진다 */
+.toast{position:fixed;left:50%;bottom:calc(var(--sheet-h,0px) + 18px);transform:translate(-50%,8px);z-index:40;
+  max-width:min(88vw,430px);padding:10px 14px;border-radius:12px;background:rgba(18,25,29,.93);color:#fff;
+  font-size:12.5px;line-height:1.52;letter-spacing:-.01em;box-shadow:0 6px 22px rgba(0,0,0,.35);
+  opacity:0;transition:opacity .18s ease,transform .18s ease;pointer-events:none}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.toast[hidden]{display:none}
+@media (min-width:860px){.toast{bottom:18px;left:calc(50% - 210px)}}
 .attr{color:var(--muted);font-size:10px;text-decoration:none;opacity:.62;white-space:nowrap}
 .attr:active{opacity:1}
 /* 범례는 작은 칩으로 접혀 있고, 누를 때만 펼쳐진다 */
@@ -473,7 +499,7 @@ html.locked,html.locked body{overflow:hidden}
       <div class="legend" id="legend" hidden><span><i style="background:var(--p-mon)"></i>월</span><span><i style="background:var(--p-tue)"></i>화</span><span><i style="background:var(--p-wed)"></i>수</span><span><i style="background:var(--p-thu)"></i>목</span><span><i style="background:var(--p-fri)"></i>금</span><span><i style="background:var(--p-sat)"></i>토</span><span><i style="background:var(--p-sun)"></i>일</span><span class="lg-br"></span><span><i class="free"></i>미예약</span><span><i style="background:var(--done)"></i>완료</span></div>
       <div class="lgfoot"><button class="lgbtn" id="lgbtn" type="button" aria-expanded="false" aria-controls="legend" title="요일별 점 색 안내"><i class="sw" aria-hidden="true"></i>범례</button><a class="attr" href="https://www.esri.com/en-us/legal/terms/attribution" target="_blank" rel="noopener" title="Esri, HERE, Garmin, © OpenStreetMap contributors">지도 © Esri·HERE·OSM</a></div>
     </div>
-    <div class="zoom"><button id="zin" aria-label="확대">+</button><button id="zout" aria-label="축소">−</button><div class="zoomrow"><button id="zfit" class="zf" aria-label="경남 전체 보기">전체</button><button id="zul" class="zf" aria-label="울산만 보기">울산</button></div></div>
+    <div class="zoom"><button id="zin" aria-label="확대">+</button><button id="zout" aria-label="축소">−</button><div class="zoomrow"><button id="zfit" class="zf" aria-label="경남 전체 보기">전체</button><button id="zul" class="zf" aria-label="울산만 보기">울산</button></div><button id="zme" class="zloc" type="button" aria-pressed="false" aria-label="내 위치" title="내 위치"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7.1" opacity=".55"/><circle cx="12" cy="12" r="3.1"/><path d="M12 2.2v3.1M12 18.7v3.1M2.2 12h3.1M18.7 12h3.1"/></svg></button></div>
   </div>
   <section class="sheet" id="sheet" data-snap="mid" aria-label="고객 목록과 정보">
     <div class="shead" id="shead" role="slider" aria-orientation="vertical" tabindex="0"
@@ -484,6 +510,7 @@ html.locked,html.locked body{overflow:hidden}
     <div class="sbody" id="side"></div>
   </section>
 </main></main>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 <script>
 // ── 데이터 서버(Apps Script) + PIN 잠금 ─────────────────────────────────
 // PIN 값은 이 파일에 넣지 않는다. 사용자가 입력한 PIN을 서버가 검증하고,
@@ -682,7 +709,7 @@ function applyView(){svg.setAttribute("viewBox",vb.join(" "));const u=vb[2]/svg.
       it.r.setAttribute("y",r[1].toFixed(1));it.r.setAttribute("width",r[2].toFixed(1));
       it.r.setAttribute("height",r[3].toFixed(1));it.r.setAttribute("rx",(r[3]/2).toFixed(1));
       it.r.style.filter=it.selp?"drop-shadow(0 "+(4*u).toFixed(2)+"px "+(12*u).toFixed(2)+"px rgba(0,0,0,.45))":""}});
-  sizeRoute(u);queueTiles()}
+  sizeRoute(u);meSize(u);queueTiles()}
 function refresh(){dayCheck();if(state.route&&!state.day)state.day=routeDay();   // 경로 추천은 날짜 하나를 늘 골라 둔다
   GEO.dongs.forEach(d=>d.el.classList.toggle("dimgu",state.gu!=="전체"&&d.g!==state.gu));
   items.forEach(it=>{if(it.g){it.g.style.display=visible(it)?"":"none";it.g.classList.toggle("sel",state.sel===it)}});
@@ -742,6 +769,81 @@ document.getElementById("zin").onclick=()=>zoomAt(1/1.5,vb[0]+vb[2]/2,vb[1]+vb[3
 document.getElementById("zout").onclick=()=>zoomAt(1.5,vb[0]+vb[2]/2,vb[1]+vb[3]/2);
 document.getElementById("zfit").onclick=()=>fitShown(state.gu);
 document.getElementById("zul").onclick=()=>fitUlsan();
+// ── 내 위치: 단추를 누르면 위치 권한을 받아 파란 점으로 찍고, 그 자리로 지도를 옮긴다 ──
+//    한 번 허용해 두면 다음부터는 열 때 조용히 따라간다(이미 '허용'된 권한일 때만 묻지 않고 켠다).
+const GKEY="asmap.geo";                                      // 기기별 '내 위치 켜짐' 기억
+const ME={on:false,watch:null,pos:null,acc:0,fresh:false,g:null,halo:null,pulse:null,ring:null,dot:null,row:null,rowMissing:false};
+function meBtn(){return document.getElementById("zme")}
+function meSaved(){try{return localStorage.getItem(GKEY)==="1"}catch(e){return false}}
+function meSave(v){try{if(v)localStorage.setItem(GKEY,"1");else localStorage.removeItem(GKEY)}catch(e){}}
+const unproj=p=>[(p[0]-PXB)/PXA,(p[1]-PYB)/PYA];             // 지도 좌표 → 경위도(투영이 1차식이라 그대로 되돌린다)
+function meKm(a,b){const A=unproj(a),B=unproj(b),R=6371,r=Math.PI/180,dA=(B[1]-A[1])*r,dB=(B[0]-A[0])*r;
+  const s=Math.sin(dA/2)*Math.sin(dA/2)+Math.cos(A[1]*r)*Math.cos(B[1]*r)*Math.sin(dB/2)*Math.sin(dB/2);
+  return 2*R*Math.asin(Math.min(1,Math.sqrt(s)))}
+function meDistText(pos){if(!ME.pos||!pos)return null;const km=meKm(ME.pos,pos);if(!isFinite(km))return null;
+  if(km<1)return "직선 약 "+Math.max(10,Math.round(km*100)*10)+"m";
+  return "직선 약 "+(km<10?km.toFixed(1):String(Math.round(km)))+"km"}
+function meMake(){if(ME.g)return;
+  const g=el("g",{class:"me","aria-hidden":"true"},svg);g.style.display="none";ME.g=g;
+  ME.halo=el("circle",{class:"halo",cx:0,cy:0,r:0},g);
+  ME.pulse=el("circle",{class:"pulse",cx:0,cy:0,r:0},g);
+  ME.ring=el("circle",{class:"ring",cx:0,cy:0,r:0},g);
+  ME.dot=el("circle",{class:"dot2",cx:0,cy:0,r:0},g);
+  const t=el("title",{},g);t.textContent="내 위치";
+  if(gNum&&gNum.parentNode===svg)svg.insertBefore(g,gNum);else svg.appendChild(g)}   // 번호·고객 점보다 위에 그린다
+function meSize(u){const g=ME.g;if(!g||!ME.pos)return;
+  g.setAttribute("transform","translate("+ME.pos[0].toFixed(2)+","+ME.pos[1].toFixed(2)+")");
+  ME.halo.setAttribute("r",Math.max((ME.acc||0)/M_PER_UNIT,16*u).toFixed(2));   // 실제 정확도 반경(화면 최소 16px)
+  ME.pulse.setAttribute("r",(19*u).toFixed(2));
+  ME.ring.setAttribute("r",(8.6*u).toFixed(2));
+  ME.dot.setAttribute("r",(6.1*u).toFixed(2))}
+function meShow(on){if(ME.g)ME.g.style.display=on?"":"none"}
+function meBtnState(){const b=meBtn();if(!b)return;b.setAttribute("aria-pressed",ME.on?"true":"false");
+  b.title=ME.pos?"내 위치로 이동":"내 위치"}
+// 위치를 받은 자리로 화면을 옮긴다 — 지금보다 넓게 보고 있으면 골목이 보이는 배율(확대 14단계 근처)까지 당긴다
+function centerMe(){if(!ME.pos||!svg.clientWidth)return;
+  const W0=svg.clientWidth,H0=svg.clientHeight||1;
+  const street=W0*(127400/Math.pow(2,14))/M_PER_UNIT;
+  const w=Math.min(vb[2],street),h=w*H0/W0;
+  fitBox([ME.pos[0]-w/2,ME.pos[1]-h/2,w,h]);meSize(vb[2]/(svg.clientWidth||1))}
+function meFix(p){if(!p||!p.coords)return;const c=p.coords;if(!isFinite(c.latitude)||!isFinite(c.longitude))return;
+  ME.pos=proj(c.longitude,c.latitude);ME.acc=isFinite(c.accuracy)?c.accuracy:0;
+  ME.on=true;meMake();meShow(true);meSize(vb[2]/(svg.clientWidth||1));meBtnState();meSave(true);
+  if(ME.row&&state.sel)ME.row.textContent=meDistText(state.sel.pos)||"";
+  else if(state.sel&&state.sel.pos&&ME.rowMissing){ME.rowMissing=false;drawSheet()}
+  if(ME.fresh){ME.fresh=false;centerMe()}}
+function meStop(){if(ME.watch!=null){try{navigator.geolocation.clearWatch(ME.watch)}catch(e){}ME.watch=null}
+  ME.on=false;meBtnState()}
+function meErr(e,silent){ME.watch=null;ME.on=false;meBtnState();
+  if(e&&e.code===1){meSave(false);meShow(false)}            // 거부·회수된 권한은 기억하지 않는다
+  if(silent)return;
+  if(e&&e.code===1)toast("위치 권한이 꺼져 있습니다. 주소창 옆 자물쇠 → ‘위치’를 ‘허용’으로 바꾼 뒤 다시 눌러 주세요",5600);
+  else if(e&&e.code===3)toast("위치를 잡는 데 시간이 걸립니다. 잠시 뒤 다시 눌러 주세요",4200);
+  else toast("위치를 가져오지 못했습니다. 잠시 뒤 다시 눌러 주세요",4200)}
+function meStart(silent){if(!navigator.geolocation){if(!silent)toast("이 브라우저에서는 위치를 쓸 수 없습니다",4200);return}
+  if(ME.watch!=null)return;
+  ME.fresh=!silent;
+  try{ME.watch=navigator.geolocation.watchPosition(meFix,e=>meErr(e,silent),{enableHighAccuracy:true,maximumAge:10000,timeout:25000})}
+  catch(e){meErr({code:0},silent);return}
+  ME.on=true;meBtnState()
+  if(!silent)toast("내 위치를 찾는 중입니다…",2600)}
+// 열 때: 지난번에 켜 두었고 브라우저가 이미 ‘허용’인 경우에만 조용히 따라간다(권한 팝업을 먼저 띄우지 않는다)
+function meAuto(){if(!meSaved())return;
+  const go=()=>{if(navigator.geolocation&&ME.watch==null)meStart(true)};
+  try{if(navigator.permissions&&navigator.permissions.query){navigator.permissions.query({name:"geolocation"})
+    .then(s=>{if(s&&s.state==="granted")go()}).catch(()=>{});return}}catch(e){}
+  go()}
+(function(){const b=meBtn();if(!b)return;
+  b.addEventListener("click",e=>{e.stopPropagation();
+    if(ME.pos){ME.fresh=true;centerMe();return}                     // 이미 찍혀 있으면 그 자리로
+    meStart(false)})})();
+// 안내 토스트
+let toastT=null;
+function toast(msg,ms){const t=document.getElementById("toast");if(!t)return;
+  t.textContent=msg;t.hidden=false;
+  if(typeof requestAnimationFrame==="function")requestAnimationFrame(()=>t.classList.add("on"));else t.classList.add("on");
+  clearTimeout(toastT);
+  toastT=setTimeout(()=>{t.classList.remove("on");setTimeout(()=>{t.hidden=true},240)},ms||4000)}
 // ── 범례: 기본은 작은 '범례' 칩 하나, 누를 때만 요일 색 안내를 펼친다 ──
 function legendEl(){return document.getElementById("legend")}
 function legendOpen(){const p=legendEl();return !!(p&&!p.hidden)}
@@ -761,6 +863,7 @@ function drawMenu(){const m=menuEl();if(!m)return;const keep=m.hidden;m.textCont
   add("완료 포함",state.mode==="all"?"켜짐":"꺼짐",()=>{state.mode=state.mode==="all"?"up":"all";refresh()},state.mode==="all");
   add("경로 추천",state.route?"켜짐":"꺼짐",()=>{state.route=!state.route;if(state.route)openSheet();refresh();if(!state.route)fitPins()},state.route);
   add(themeNow()==="dark"?"낮으로 보기":"밤으로 보기",null,()=>setTheme(themeNow()==="dark"?"light":"dark"),null);
+  if(ME.on||ME.pos)add("내 위치 끄기",null,()=>{meStop();meSave(false);meShow(false);drawMenu()},null);
   h("div","sep",m);
   add("지금 새로고침",null,()=>loadMap(true),null);
   add("잠금","PIN 다시 묻기",()=>{pinForget();sheetState="wait";setAsof();rebuild();showGate("")},null);
@@ -989,6 +1092,7 @@ function drawBody(){
 // 선택한 고객 1건 — 시트 맨 위 카드(이름·예약일시·주소·모델·증상·메모·전화·길찾기)
 function drawDetail(box,it){
   const c=h("div","card",box);
+  ME.row=null;ME.rowMissing=false;
   const hd=h("div","chead",c);h("span","clab",hd,"선택한 고객");
   const xb=h("button","xclose",hd);xb.type="button";xb.setAttribute("aria-label","목록으로 돌아가기");
   h("span","xi",xb,"✕");h("span",null,xb,"목록으로");
@@ -997,6 +1101,8 @@ function drawDetail(box,it){
   h("span","badge"+dowClass(it),nm,it.k==="up"?(whenText(it)):((it.date||"")+" 완료"));
   const kv=(k,v)=>{if(!v)return;const r=h("div","kv",c);h("b",null,r,k);h("span",null,r,v);return r};
   kv("주소",it.addr);
+  if(it.pos){if(ME.pos){const r=h("div","kv",c);h("b",null,r,"내 위치");const v=h("span",null,r,meDistText(it.pos)||"");ME.row=v}
+    else ME.rowMissing=true}                                                // 위치를 아직 못 잡았으면 잡히는 대로 채운다
   kv("모델",it.model);
   kv("증상",it.sym);
   if(it.memo){const mr=h("div","kv col",c);h("b",null,mr,"메모");
@@ -1293,6 +1399,7 @@ try{if(document.fonts&&document.fonts.ready&&document.fonts.ready.then)document.
     const w=it.t.getComputedTextLength&&it.t.getComputedTextLength();
     if(typeof w==="number"&&isFinite(w)&&w>0)it.lw=w}catch(e){}});applyView()})}catch(e){}
 if(PIN){hideGate();loadMap(true)}else{showGate("")}
+meAuto();
 </script>
 </body>
 </html>
