@@ -436,7 +436,8 @@ html.locked,html.locked body{overflow:hidden}
     height:calc(100% - var(--head-h,116px) - 28px);box-shadow:var(--sh-2)}
   .sheet .grip{display:none}
   .sheet .shead{cursor:default;padding-top:9px}
-  .zoom,.legend{bottom:14px}
+  .zoom{bottom:14px;right:calc(420px + 26px)}   /* 단추가 오른쪽 패널 뒤에 숨지 않게 패널 왼쪽에 둔다 */
+  .legendwrap{bottom:14px}
 }
 @media (prefers-reduced-motion:no-preference){
   .cardrow,.chip,.zoom button{will-change:transform}
