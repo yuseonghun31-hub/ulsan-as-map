@@ -1122,8 +1122,9 @@ function select(it,center){
   const prev=state.sel;                                        // 바로 앞에 고른 고객(또는 내 위치)
   state.sel=it;
   if(it.pos){                                                  // ① 출발 → ② 도착 구간을 자동으로 잇는다
-    if(CMP.from==="@me")CMP.to=it;
-    else if(prev&&prev!==it&&prev.pos){CMP.from=prev;CMP.to=it}
+    if(CMP.from==="@me"&&!CMP.to)CMP.to=it;                    // 내 위치를 먼저 찍어 둔 채 고객을 고른 경우
+    else if(prev&&prev!==it&&prev.pos){CMP.from=prev;CMP.to=it} // 앞서 연 고객 → 이번 고객
+    else if(!prev&&CMP.from==="@me")CMP.to=it;                 // 목록에서 골라도 내 위치 기준은 이어 간다
     else if(!prev&&CMP.to&&CMP.to!==it){CMP.from=null;CMP.to=null}}   // 카드를 닫은 뒤 새로 고른 건이면 옛 비교는 버린다
   setLegend(false);                                            // 점을 골랐으면 범례는 접어 지도를 뻥 뚫리게
   if(it.pos){
