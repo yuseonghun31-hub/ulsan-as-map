@@ -199,7 +199,7 @@ svg#map.drag{cursor:grabbing}
    월요일 예약 점이 파랑이라, 내 위치는 청록으로 살짝 갈라 두고 점을 눌러 ① 출발점으로 잡을 수 있게 한다 */
 .me{pointer-events:none}
 .me *{pointer-events:none}
-.me .hit2{pointer-events:all;cursor:pointer}
+.me .hit2{fill:transparent;stroke:none;pointer-events:all;cursor:pointer}   /* 투명한 터치 원 — 채움을 비우지 않으면 검게 칠해진다 */
 .me .halo{fill:#06b6d4;fill-opacity:.12;stroke:rgba(6,182,212,.38);stroke-width:1;vector-effect:non-scaling-stroke}
 .me .pulse{fill:#06b6d4;fill-opacity:.22;transform-box:fill-box;transform-origin:center}
 .me .ring{fill:#fff;filter:drop-shadow(0 1px 2.5px rgba(0,0,0,.32))}
