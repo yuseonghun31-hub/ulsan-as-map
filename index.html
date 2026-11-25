@@ -1424,7 +1424,9 @@ function rebuild(){
   const up=(liveUp||UP.map(r=>({k:"up",date:r[0],time:r[1],gu:r[2],name:r[3],ld:r[4],addr:r[5],model:r[6],sym:r[7],no:r[8],ph:"",memo:""}))).map(o=>Object.assign({},o));
   const dn=(liveDone||DONE.map(r=>({k:"done",date:r[0],gu:r[1],name:r[2],ld:r[3],model:r[4],no:r[5],tel:r[6]==="t",ph:""}))).map(o=>Object.assign({},o));
   const have={};up.forEach(i=>have[i.no]=1);dn.forEach(i=>have[i.no]=1);
-  const selNo=state.sel&&state.sel.no;state.sel=null;CMP.from=null;CMP.to=null;items=up.concat(dn);const cnt={},rk={};
+  const selNo=state.sel&&state.sel.no;                                  // 자료를 다시 받아도 고른 카드와 비교 구간은 그대로 잇는다
+  const cfNo=CMP.from==="@me"?"@me":(CMP.from&&CMP.from.no),ctNo=CMP.to&&CMP.to.no;
+  state.sel=null;CMP.from=null;CMP.to=null;items=up.concat(dn);const cnt={},rk={};
   items.forEach(it=>{if(it.k==="up"){it.saddr=it.addr}
     if(it.ld==null)it.ld=ldOf(it.gu,it.addr||"",it.no);
     const gx=it.k==="up"?GEOX[it.no]:null,c=gx||(it.ld?locate(it.gu,it.ld):null);it.exact=!!gx;if(!c){it.pos=null;it.rank=0;return}
@@ -1433,6 +1435,9 @@ function rebuild(){
   gPts.textContent="";
 items.forEach(it=>{mkPin(it)});
   if(selNo)state.sel=items.find(i=>i.no===selNo)||null;
+  CMP.from=cfNo==="@me"?"@me":(cfNo?items.find(i=>i.no===cfNo)||null:null);
+  CMP.to=ctNo?items.find(i=>i.no===ctNo)||null:null;
+  if(!CMP.from||(CMP.from!=="@me"&&!CMP.to)){CMP.from=null;CMP.to=null}
   refresh();setAsof()}
 function takeUp(v){liveUp=parseUp(v);const m=String((v[1]||[])[0]||"").match(/\d{4}-(\d{2})-(\d{2}) (\d{2}:\d{2})/);if(m)sheetAt=m[1]+"/"+m[2]+" "+m[3]}
 function takeDone(v){const d=parseDone(v);if(d.length)liveDone=d}
