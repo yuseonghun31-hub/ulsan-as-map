@@ -163,7 +163,8 @@ svg#map.drag{cursor:grabbing}
 .cmp-line{fill:none;stroke:var(--cmp);stroke-width:2.8;vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round;pointer-events:none}
 .cmp-line.case{stroke:var(--panel);stroke-width:6.5;opacity:.85}
 .cmp-line.est{stroke-dasharray:7 6}
-.cmpm-t{fill:var(--cmp);font-family:var(--font);font-weight:700;text-anchor:middle;paint-order:stroke;stroke:var(--panel);stroke-linejoin:round;pointer-events:none;font-variant-numeric:tabular-nums}
+.cmpm-t{fill:var(--cmp);font-family:var(--font);font-weight:700;text-anchor:middle;pointer-events:none;font-variant-numeric:tabular-nums}
+.cmpm-b{fill:var(--panel);stroke:var(--cmp);stroke-width:1.2;vector-effect:non-scaling-stroke;opacity:.96}   /* 거리 글자 뒤 캡슐 — 도로 선이 글자를 지나지 않게 */
 .cn{pointer-events:none}
 .cn circle{fill:var(--cmp);stroke:var(--panel);stroke-width:1.6;vector-effect:non-scaling-stroke}
 .cn text{fill:#fff;text-anchor:middle;font-family:var(--font);font-weight:700}
@@ -917,17 +918,22 @@ function drawCmp(){gCmp.textContent="";gCmpB.textContent="";CMP.nums=[];CMP.mid=
   if(o){const d=o.path?smoothPath([o.aPos].concat(o.path,[o.bPos])):cmpArc(o.aPos,o.bPos);
     el("path",{class:"cmp-line case",d},gCmp);
     el("path",{class:"cmp-line"+(o.real?"":" est"),d},gCmp);
-    // 선 가운데 위에 거리 글자를 얹는다 — 두 점이 화면에서 가까우면(190px 미만) 점 이름표와 겹치므로 숨긴다
-    const t=el("text",{class:"cmpm-t",x:0,y:0},gCmp);t.textContent=cmpText(o);CMP.mid={t,a:o.aPos,b:o.bPos};
+    // 선 가운데 옆에 거리 글자를 캡슐에 담아 얹는다 — 두 점이 화면에서 가까우면(240px 미만) 점 이름표와 겹치므로 숨긴다
+    const r=el("rect",{class:"cmpm-b",x:0,y:0,width:0,height:0,rx:0},gCmp);
+    const t=el("text",{class:"cmpm-t",x:0,y:0},gCmp);t.textContent=cmpText(o);CMP.mid={r,t,a:o.aPos,b:o.bPos};
     cmpBadge(o.aPos,"1");cmpBadge(o.bPos,"2")}
   else if(CMP.from==="@me"&&ME.pos)cmpBadge(ME.pos,"1");       // 목적지를 기다리는 ① 내 위치
   drawCmpBar(o);sizeCmp(vb[2]/(svg.clientWidth||1))}
 function sizeCmp(u){const m=CMP.mid;
-  if(m){const t=m.t,dx=m.b[0]-m.a[0],dy=m.b[1]-m.a[1],ln=Math.hypot(dx,dy)||1,off=22*u;
-    t.setAttribute("x",((m.a[0]+m.b[0])/2+dy/ln*off).toFixed(2));
-    t.setAttribute("y",((m.a[1]+m.b[1])/2-dx/ln*off).toFixed(2));
-    t.setAttribute("font-size",(10.5*u).toFixed(2));t.setAttribute("stroke-width",(3.6*u).toFixed(2));
-    t.style.display=ln/u>=240?"":"none"}
+  if(m){const t=m.t,dx=m.b[0]-m.a[0],dy=m.b[1]-m.a[1],ln=Math.hypot(dx,dy)||1,off=23*u;
+    const x=(m.a[0]+m.b[0])/2+dy/ln*off,y=(m.a[1]+m.b[1])/2-dx/ln*off;
+    t.setAttribute("x",x.toFixed(2));t.setAttribute("y",y.toFixed(2));t.setAttribute("font-size",(10.5*u).toFixed(2));
+    let tw=0;try{tw=t.getComputedTextLength()||0}catch(e){}
+    if(!(tw>0))tw=String(t.textContent).length*6.1*u;
+    const hs=16*u,pw=5*u;
+    m.r.setAttribute("x",(x-tw/2-pw).toFixed(2));m.r.setAttribute("y",(y-hs*0.72).toFixed(2));
+    m.r.setAttribute("width",(tw+pw*2).toFixed(2));m.r.setAttribute("height",hs.toFixed(2));m.r.setAttribute("rx",(hs/2).toFixed(2));
+    const on=ln/u>=240?"":"none";t.style.display=on;m.r.style.display=on}
   (CMP.nums||[]).forEach(n=>{const x=n.pos[0]-13*u,y=n.pos[1]-13*u;
     n.c.setAttribute("cx",x.toFixed(2));n.c.setAttribute("cy",y.toFixed(2));n.c.setAttribute("r",(7.2*u).toFixed(2));
     n.t.setAttribute("x",x.toFixed(2));n.t.setAttribute("y",(y+3.1*u).toFixed(2));n.t.setAttribute("font-size",(9.4*u).toFixed(2))})}
