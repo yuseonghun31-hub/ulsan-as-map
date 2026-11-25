@@ -923,11 +923,11 @@ function drawCmp(){gCmp.textContent="";gCmpB.textContent="";CMP.nums=[];CMP.mid=
   else if(CMP.from==="@me"&&ME.pos)cmpBadge(ME.pos,"1");       // 목적지를 기다리는 ① 내 위치
   drawCmpBar(o);sizeCmp(vb[2]/(svg.clientWidth||1))}
 function sizeCmp(u){const m=CMP.mid;
-  if(m){const t=m.t,dx=m.b[0]-m.a[0],dy=m.b[1]-m.a[1],ln=Math.hypot(dx,dy)||1,off=13*u;
+  if(m){const t=m.t,dx=m.b[0]-m.a[0],dy=m.b[1]-m.a[1],ln=Math.hypot(dx,dy)||1,off=22*u;
     t.setAttribute("x",((m.a[0]+m.b[0])/2+dy/ln*off).toFixed(2));
     t.setAttribute("y",((m.a[1]+m.b[1])/2-dx/ln*off).toFixed(2));
     t.setAttribute("font-size",(10.5*u).toFixed(2));t.setAttribute("stroke-width",(3.6*u).toFixed(2));
-    t.style.display=ln/u>=190?"":"none"}
+    t.style.display=ln/u>=240?"":"none"}
   (CMP.nums||[]).forEach(n=>{const x=n.pos[0]-13*u,y=n.pos[1]-13*u;
     n.c.setAttribute("cx",x.toFixed(2));n.c.setAttribute("cy",y.toFixed(2));n.c.setAttribute("r",(7.2*u).toFixed(2));
     n.t.setAttribute("x",x.toFixed(2));n.t.setAttribute("y",(y+3.1*u).toFixed(2));n.t.setAttribute("font-size",(9.4*u).toFixed(2))})}
