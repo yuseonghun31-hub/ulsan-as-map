@@ -204,7 +204,7 @@ svg#map.drag{cursor:grabbing}
 .me .pulse{fill:#06b6d4;fill-opacity:.22;transform-box:fill-box;transform-origin:center}
 .me .ring{fill:#fff;filter:drop-shadow(0 1px 2.5px rgba(0,0,0,.32))}
 .me .dot2{fill:#06b6d4}
-.me.sel .ring{stroke:#06b6d4;stroke-width:2.5}
+.me.sel .ring{stroke:#06b6d4;stroke-width:3;vector-effect:non-scaling-stroke}   /* ① 출발점으로 잡힌 내 위치: 점 둘레에 청록 테두리(화면 3px 고정) */
 @media (prefers-reduced-motion:no-preference){
   .me .pulse{animation:mePulse 2.6s cubic-bezier(.22,.61,.36,1) infinite}
 }
