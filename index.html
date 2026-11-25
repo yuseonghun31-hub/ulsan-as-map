@@ -21,11 +21,17 @@
 :root{
   --bg:#eceeed; --panel:#ffffff; --panel-2:#f5f6f5; --ink:#0e1412; --muted:#69756f; --line:rgba(14,24,20,.10);
   --accent:#0d5a49; --accent-ink:#ffffff; --accent-soft:rgba(13,90,73,.10);
-  --done:#93a09b; --warn:#9f561a; --warn-soft:rgba(159,86,26,.12);
-  /* 지도 점 색: 예약된 요일별 — 카드의 방문일시 배지와 같은 계열, 지도 위에서 서로 구분되게 */
-  --p-mon:#5b93e8; --p-tue:#2fb87a; --p-wed:#2ec0d4; --p-thu:#e0a651; --p-fri:#bd8ce6;
-  --p-sat:#93a9c6; --p-sun:#e0675a;
-  --p-free:#ffffff; --p-free-ring:rgba(8,16,13,.5);
+  --done:#64748b; --warn:#9f561a; --warn-soft:rgba(159,86,26,.12);
+  /* 지도 점 색: 예약된 요일별 — 어두운 지도에서 작은 점으로도 한눈에 갈리는 고대비 7색.
+     카드의 방문일시 배지도 같은 값을 쓴다(요일 하나 = 색 하나). */
+  --p-mon:#3b82f6;  /* 월 선명한 파랑 */
+  --p-tue:#22c55e;  /* 화 선명한 초록 */
+  --p-wed:#facc15;  /* 수 쨍한 노랑 */
+  --p-thu:#f97316;  /* 목 선명한 주황 */
+  --p-fri:#a855f7;  /* 금 선명한 보라 */
+  --p-sat:#f472b6;  /* 토 선명한 분홍 */
+  --p-sun:#ef4444;  /* 일 선명한 빨강 */
+  --p-free:#ffffff; --p-free-ring:rgba(8,16,13,.55);
   --glass:rgba(255,255,255,.74); --glass-drop:rgba(255,255,255,.42); --glass-line:rgba(255,255,255,.55);
   --sheet:#ffffff; --sheet-h:42vh;
   --sh-1:0 1px 2px rgba(12,22,18,.05),0 1px 1px rgba(12,22,18,.04);
@@ -42,7 +48,7 @@
   :root:not([data-theme="light"]){
     --bg:#0e1316; --panel:#151c21; --panel-2:#1a2329; --ink:#e9eeec; --muted:#8d9a98; --line:rgba(255,255,255,.09);
     --accent:#7cc0a6; --accent-ink:#07130f; --accent-soft:rgba(124,192,166,.14);
-    --done:#6b7877; --warn:#d9a06a; --warn-soft:rgba(217,160,106,.14);
+    --done:#64748b; --warn:#d9a06a; --warn-soft:rgba(217,160,106,.14);
     --glass:rgba(18,25,29,.72); --glass-drop:rgba(18,25,29,.34); --glass-line:rgba(255,255,255,.07);
     --sheet:#121920;
     --sh-1:0 1px 2px rgba(0,0,0,.4); --sh-2:0 2px 10px rgba(0,0,0,.45),0 14px 30px rgba(0,0,0,.35);
@@ -58,7 +64,7 @@
 :root[data-theme="dark"]{
   --bg:#0e1316; --panel:#151c21; --panel-2:#1a2329; --ink:#e9eeec; --muted:#8d9a98; --line:rgba(255,255,255,.09);
   --accent:#7cc0a6; --accent-ink:#07130f; --accent-soft:rgba(124,192,166,.14);
-  --done:#6b7877; --warn:#d9a06a; --warn-soft:rgba(217,160,106,.14);
+  --done:#64748b; --warn:#d9a06a; --warn-soft:rgba(217,160,106,.14);
   --glass:rgba(18,25,29,.72); --glass-drop:rgba(18,25,29,.34); --glass-line:rgba(255,255,255,.07);
   --sheet:#121920;
   --sh-1:0 1px 2px rgba(0,0,0,.4); --sh-2:0 2px 10px rgba(0,0,0,.45),0 14px 30px rgba(0,0,0,.35);
@@ -131,13 +137,13 @@ svg#map.drag{cursor:grabbing}
 /* 선택 핀 이름표: 두꺼운 흰 링 대신 짙은 슬레이트 캡슐 + 요일 색 1.5px 슬림 테두리 + 부드러운 그림자 */
 .pt .lbl.sel{fill:rgba(20,26,34,.94);fill-opacity:1;stroke:rgba(255,255,255,.16);stroke-width:1.5;
   vector-effect:non-scaling-stroke;stroke-linejoin:round;filter:drop-shadow(0 4px 12px rgba(0,0,0,.45))}
-.pt.sel.dow-mon .lbl.sel{stroke:rgba(91,147,232,.62)}
-.pt.sel.dow-tue .lbl.sel{stroke:rgba(47,184,122,.62)}
-.pt.sel.dow-wed .lbl.sel{stroke:rgba(46,192,212,.62)}
-.pt.sel.dow-thu .lbl.sel{stroke:rgba(224,166,81,.66)}
-.pt.sel.dow-fri .lbl.sel{stroke:rgba(189,140,230,.62)}
-.pt.sel.dow-sat .lbl.sel{stroke:rgba(147,169,198,.62)}
-.pt.sel.dow-sun .lbl.sel{stroke:rgba(224,103,90,.62)}
+.pt.sel.dow-mon .lbl.sel{stroke:rgba(59,130,246,.78)}
+.pt.sel.dow-tue .lbl.sel{stroke:rgba(34,197,94,.78)}
+.pt.sel.dow-wed .lbl.sel{stroke:rgba(250,204,21,.85)}
+.pt.sel.dow-thu .lbl.sel{stroke:rgba(249,115,22,.80)}
+.pt.sel.dow-fri .lbl.sel{stroke:rgba(168,85,247,.78)}
+.pt.sel.dow-sat .lbl.sel{stroke:rgba(244,114,182,.78)}
+.pt.sel.dow-sun .lbl.sel{stroke:rgba(239,68,68,.80)}
 .pt text{font-family:var(--font);font-weight:600;fill:var(--ink);letter-spacing:-.01em;pointer-events:none}
 /* 이름표는 전화가 아니다 — 점이든 이름표든 누르면 아래 정보란이 열린다 */
 .pt.done text{font-weight:500;fill:var(--muted)}
@@ -319,17 +325,14 @@ h2 span{font-variant-numeric:tabular-nums;font-size:11.5px}
   padding:3px 7px;border-radius:7px;background:var(--accent);color:var(--accent-ink);font-variant-numeric:tabular-nums}
 .badge.done{background:var(--panel-2);color:var(--muted);border:1px solid var(--line);font-weight:600}
 .badge.tel{background:transparent;color:var(--muted);border:1px dashed var(--line);font-weight:600}
-/* 방문일시 배지: 요일별 색 — 라이트는 차분한 딥 톤 + 흰 글씨, 다크는 소프트 파스텔 + 어두운 글씨 */
-:root{--d-mon:#2b4c7e;--d-mon-i:#fff;--d-tue:#0d5a49;--d-tue-i:#fff;--d-wed:#0e6674;--d-wed-i:#fff;
-  --d-thu:#8a4b2a;--d-thu-i:#fff;--d-fri:#6b3554;--d-fri-i:#fff;--d-sat:#475569;--d-sat-i:#fff;--d-sun:#7c3a3a;--d-sun-i:#fff;
+/* 방문일시 배지: 요일별 색 — 지도 점과 같은 7색을 그대로 쓴다.
+   흰 글씨는 노랑·초록·주황에서 묻히므로, 일곱 색 모두 어두운 글씨(#0b1220, 대비 5.1~13.7:1)로 올린다 */
+:root{--d-mon:#3b82f6;--d-mon-i:#0b1220;--d-tue:#22c55e;--d-tue-i:#0b1220;--d-wed:#facc15;--d-wed-i:#0b1220;
+  --d-thu:#f97316;--d-thu-i:#0b1220;--d-fri:#a855f7;--d-fri-i:#0b1220;--d-sat:#f472b6;--d-sat-i:#0b1220;--d-sun:#ef4444;--d-sun-i:#0b1220;
   --d-unv-bg:#e4ede9;--d-unv-ink:#33564b}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --d-mon:#a9c6e8;--d-mon-i:#0a1418;--d-tue:#7cc0a6;--d-tue-i:#08140f;--d-wed:#8ecfd6;--d-wed-i:#08161a;
-  --d-thu:#d9bd8a;--d-thu-i:#1a1206;--d-fri:#c6b1dc;--d-fri-i:#150f1a;--d-sat:#b3c2d4;--d-sat-i:#0c1318;--d-sun:#e0b0ab;--d-sun-i:#1a0d0c;
   --d-unv-bg:rgba(124,192,166,.13);--d-unv-ink:#9fd0bb}}
 :root[data-theme="dark"]{
-  --d-mon:#a9c6e8;--d-mon-i:#0a1418;--d-tue:#7cc0a6;--d-tue-i:#08140f;--d-wed:#8ecfd6;--d-wed-i:#08161a;
-  --d-thu:#d9bd8a;--d-thu-i:#1a1206;--d-fri:#c6b1dc;--d-fri-i:#150f1a;--d-sat:#b3c2d4;--d-sat-i:#0c1318;--d-sun:#e0b0ab;--d-sun-i:#1a0d0c;
   --d-unv-bg:rgba(124,192,166,.13);--d-unv-ink:#9fd0bb}
 .badge.dow-mon{background:var(--d-mon);color:var(--d-mon-i)}
 .badge.dow-tue{background:var(--d-tue);color:var(--d-tue-i)}
