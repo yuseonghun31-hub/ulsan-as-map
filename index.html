@@ -917,14 +917,18 @@ function drawCmp(){gCmp.textContent="";gCmpB.textContent="";CMP.nums=[];CMP.mid=
   if(o){const d=o.path?smoothPath([o.aPos].concat(o.path,[o.bPos])):cmpArc(o.aPos,o.bPos);
     el("path",{class:"cmp-line case",d},gCmp);
     el("path",{class:"cmp-line"+(o.real?"":" est"),d},gCmp);
-    const mx=(o.aPos[0]+o.bPos[0])/2,my=(o.aPos[1]+o.bPos[1])/2;
-    const t=el("text",{class:"cmpm-t",x:mx,y:my},gCmp);t.textContent=cmpText(o);CMP.mid={t};
+    // 선 가운데 위에 거리 글자를 얹는다 — 두 점이 화면에서 가까우면(190px 미만) 점 이름표와 겹치므로 숨긴다
+    const t=el("text",{class:"cmpm-t",x:0,y:0},gCmp);t.textContent=cmpText(o);CMP.mid={t,a:o.aPos,b:o.bPos};
     cmpBadge(o.aPos,"1");cmpBadge(o.bPos,"2")}
   else if(CMP.from==="@me"&&ME.pos)cmpBadge(ME.pos,"1");       // 목적지를 기다리는 ① 내 위치
   drawCmpBar(o);sizeCmp(vb[2]/(svg.clientWidth||1))}
-function sizeCmp(u){const t=CMP.mid&&CMP.mid.t;
-  if(t){t.setAttribute("font-size",(10.5*u).toFixed(2));t.setAttribute("stroke-width",(3.6*u).toFixed(2))}
-  (CMP.nums||[]).forEach(n=>{const x=n.pos[0]-9.5*u,y=n.pos[1]-9.5*u;
+function sizeCmp(u){const m=CMP.mid;
+  if(m){const t=m.t,dx=m.b[0]-m.a[0],dy=m.b[1]-m.a[1],ln=Math.hypot(dx,dy)||1,off=13*u;
+    t.setAttribute("x",((m.a[0]+m.b[0])/2+dy/ln*off).toFixed(2));
+    t.setAttribute("y",((m.a[1]+m.b[1])/2-dx/ln*off).toFixed(2));
+    t.setAttribute("font-size",(10.5*u).toFixed(2));t.setAttribute("stroke-width",(3.6*u).toFixed(2));
+    t.style.display=ln/u>=190?"":"none"}
+  (CMP.nums||[]).forEach(n=>{const x=n.pos[0]-13*u,y=n.pos[1]-13*u;
     n.c.setAttribute("cx",x.toFixed(2));n.c.setAttribute("cy",y.toFixed(2));n.c.setAttribute("r",(7.2*u).toFixed(2));
     n.t.setAttribute("x",x.toFixed(2));n.t.setAttribute("y",(y+3.1*u).toFixed(2));n.t.setAttribute("font-size",(9.4*u).toFixed(2))})}
 function drawCmpBar(o){const bar=document.getElementById("cmpbar");if(!bar)return;
