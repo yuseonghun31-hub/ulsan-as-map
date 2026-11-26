@@ -1365,7 +1365,7 @@ window.addEventListener("pointerup",dragStop(true));window.addEventListener("poi
 document.addEventListener("touchmove",e=>{if(DR)e.preventDefault()},{passive:false});
 document.addEventListener("contextmenu",e=>{if(DR||PD)e.preventDefault()});
 function drawRoute(s){const R=RT;if(!R)return;const box=h("div","rp",s);
-  const hd=h("h2",null,box);h("b",null,hd,"경로 추천");const est=R.rows.filter((r,i)=>(i>0||R.st)&&!r.real).length;h("span",null,hd,est?"어림 "+est+"구간 포함":"네이버 길찾기 기준");
+  const hd=h("h2",null,box);h("b",null,hd,"경로 추천");const est=R.rows.filter((r,i)=>(i>0||R.st)&&!r.real).length;h("span",null,hd,est?"어림 "+est+"구간 포함":"샘플 구간 기준");
   // 날짜 고르기는 상단 필터의 날짜 칩으로 옮겼다(같은 줄이 두 번 나오지 않게)
   const f=h("div","rset",box);const lab=t=>{const l=h("label",null,f);h("span",null,l,t);return l};
   const sel=document.createElement("select");lab("출발").appendChild(sel);const o0=h("option",null,sel,"첫 방문지부터");o0.value="";["HOME","OFFICE"].forEach(id=>{const o=h("option",null,sel,PNAME[id]+(PLACE[id]?"":" (좌표 대기 중)"));o.value="@"+id});
@@ -1394,7 +1394,7 @@ function drawRoute(s){const R=RT;if(!R)return;const box=h("div","rp",s);
   sec("다른 날 예약",R.other,(a,c)=>h("span","rt",a,c.it.date.replace(/\(.\)/,"")+" "+c.it.time),addTxt,"넣기",routeIn);
   sec("뺀 건",R.outs,(a,c)=>h("span","rt",a,tmin(c.time)!=null?"예약 "+c.time:c.date),()=>"","되돌리기",routeBack);
   if(R.nopos.length)h("div","rwarn",box,"주소에 동이 없어 경로에 못 넣은 건: "+R.nopos.map(i=>i.name).join(", "));
-  h("div","note",box,"확정 예약은 시간을 그대로 두고, 미확정 건을 이동 시간이 가장 적게 늘어나는 자리에 끼웠습니다. 이동 시간과 경로 선은 네이버 길찾기에서 받은 자동차 기준 값이고, 받은 시점의 교통 상황이 반영되어 있습니다. 주차와 건물 출입 시간은 들어 있지 않으니 건당 작업 시간에 포함해 잡으세요. 시작 시각은 첫 방문지에 도착하는 시각이고, 출발지를 고르면 거기서 떠나야 하는 시각을 거꾸로 계산해 보여줍니다. 아직 네이버 값이 없는 구간은 (어림)으로 표시하고 점선으로 그립니다. 사무실을 넣으면 머무는 시간도 건당 작업 시간만큼 잡습니다. 넣고 뺀 내용과 직접 바꾼 순서는 날짜별로 저장됩니다.")}
+  h("div","note",box,"확정 예약은 시간을 그대로 두고, 미확정 건을 이동 시간이 가장 적게 늘어나는 자리에 끼웠습니다. 이동 시간과 경로 선은 이 샘플에 넣어 둔 자동차 기준 값입니다(실제 자료는 네이버 길찾기에서 받아 옵니다). 주차와 건물 출입 시간은 들어 있지 않으니 건당 작업 시간에 포함해 잡으세요. 시작 시각은 첫 방문지에 도착하는 시각이고, 출발지를 고르면 거기서 떠나야 하는 시각을 거꾸로 계산해 보여줍니다. 아직 네이버 값이 없는 구간은 (어림)으로 표시하고 점선으로 그립니다. 사무실을 넣으면 머무는 시간도 건당 작업 시간만큼 잡습니다. 넣고 뺀 내용과 직접 바꾼 순서는 날짜별로 저장됩니다.")}
 // ── 자료: 구글 Apps Script(getMapData)가 시트 4개 탭을 읽어 넘겨준다 (10분마다 자동 갱신)
 let liveUp=null,liveDone=null,sheetAt="",sheetState="wait",sheetErr="",loading=false,lastAt=0;
 const LD0={};DONE.forEach(r=>LD0[r[5]]=r[3]);UP.forEach(r=>LD0[r[8]]=r[4]);
@@ -1413,7 +1413,7 @@ function setAsof(){const e=document.getElementById("asof");if(!e)return;const li
   const w=lastAt?new Date(lastAt):null,t=w?String(w.getHours()).padStart(2,"0")+":"+String(w.getMinutes()).padStart(2,"0"):"";
   e.textContent="↻ "+(live?((sheetAt||"최신")+(t?" · "+t:""))
     :sheetState==="wait"?"불러오는 중…":("읽지 못함"+(sheetErr?" · "+sheetErr:"")+(loading?"":" · 눌러 다시 시도")));
-  e.title=live?"눌러서 새로고침 · 시트 "+(sheetAt||"최신")+(t?" "+t+" 갱신":""):"눌러서 다시 시도";
+  e.title=live?"눌러서 새로고침 · 샘플 자료"+(t?" "+t+" 기준":""):"눌러서 다시 시도";
   e.classList.toggle("warn",!live&&sheetState!=="wait")}
 function rebuild(){
   const up=(liveUp||UP.map(r=>({k:"up",date:r[0],time:r[1],gu:r[2],name:r[3],ld:r[4],addr:r[5],model:r[6],sym:r[7],no:r[8],ph:"",memo:""}))).map(o=>Object.assign({},o));
