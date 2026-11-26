@@ -36,6 +36,9 @@ self.addEventListener("fetch", (e) => {
   // 다른 도메인(네이버 지도 SDK·타일·시트 서버)은 그대로 지나간다
   if (url.origin !== self.location.origin) return;
 
+  // 샘플 시연 페이지는 캐시에 넣지 않는다(실제 index.html 캐시를 덮지 않게)
+  if (url.pathname.endsWith("/sample.html")) return;
+
   // 화면은 최신을 먼저 받고, 안 되면 캐시로 연다
   if (req.mode === "navigate") {
     e.respondWith(
