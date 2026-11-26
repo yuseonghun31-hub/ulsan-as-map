@@ -524,6 +524,37 @@ html.locked,html.locked body{overflow:hidden}
 @media (prefers-reduced-motion:no-preference){
   .cardrow,.chip,.zoom button{will-change:transform}
 }
+
+/* ── 샘플 시연: MAS 접수 상세 미리보기 · 전화 연결 ── */
+.demo-bg{position:fixed;inset:0;z-index:9000;background:rgba(6,12,10,.55);display:flex;align-items:flex-end;justify-content:center;
+  animation:dfade .18s ease-out}
+.demo-bg[hidden]{display:none}
+@keyframes dfade{from{opacity:0}to{opacity:1}}
+@keyframes dup{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
+.mas{width:100%;max-width:520px;max-height:88vh;overflow:auto;background:#f4f5f7;color:#1d2024;border-radius:20px 20px 0 0;
+  box-shadow:0 -10px 40px rgba(0,0,0,.35);animation:dup .22s ease-out;font-size:14px}
+@media (min-width:700px){.demo-bg{align-items:center}.mas{border-radius:18px}}
+.mas .top{display:flex;align-items:center;gap:10px;padding:14px 16px;background:#c8102e;color:#fff;position:sticky;top:0}
+.mas .top b{font-size:16px;letter-spacing:-.02em}.mas .top small{opacity:.85;font-size:12px;margin-left:auto}
+.mas .top button{border:0;background:rgba(255,255,255,.18);color:#fff;width:30px;height:30px;border-radius:50%;font-size:15px}
+.mas .tag{margin:12px 16px 0;padding:8px 12px;border-radius:10px;background:#fff4d6;color:#7a5300;font-size:12.5px;line-height:1.45}
+.mas .sec{margin:12px 16px;background:#fff;border-radius:12px;border:1px solid #e4e6ea;overflow:hidden}
+.mas .sec h4{font-size:13px;color:#5b6270;padding:10px 14px;border-bottom:1px solid #eef0f3;background:#fafbfc}
+.mas .row{display:flex;padding:9px 14px;border-bottom:1px solid #f1f2f4;gap:12px}.mas .row:last-child{border-bottom:0}
+.mas .row span:first-child{flex:0 0 74px;color:#7b8290}.mas .row span:last-child{flex:1;font-weight:600;word-break:keep-all}
+.mas .st{display:inline-block;padding:2px 8px;border-radius:6px;background:#e7f0ff;color:#1a56db;font-weight:700;font-size:12.5px}
+.mas .btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px 16px 18px}
+.mas .btns button{height:44px;border-radius:10px;border:1px solid #d5d8de;background:#fff;font-weight:700;font-size:14px;color:#1d2024}
+.mas .btns button.pri{background:#c8102e;border-color:#c8102e;color:#fff}
+.call{width:100%;max-width:520px;background:linear-gradient(180deg,#123a2f,#0a1f19);color:#fff;border-radius:22px 22px 0 0;
+  padding:34px 24px 26px;text-align:center;animation:dup .22s ease-out}
+@media (min-width:700px){.call{border-radius:22px}}
+.call .av{width:76px;height:76px;border-radius:50%;margin:0 auto 14px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:32px}
+.call b{display:block;font-size:22px}.call .num{margin-top:6px;opacity:.8;font-variant-numeric:tabular-nums}
+.call .ing{margin-top:14px;font-size:13px;opacity:.75}.call .ing i{display:inline-block;animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.2}}
+.call .note{margin:18px auto 0;max-width:330px;font-size:12px;opacity:.6;line-height:1.5}
+.call button{margin-top:20px;width:64px;height:64px;border-radius:50%;border:0;background:#e53935;color:#fff;font-size:26px}
 </style>
 </head>
 <body>
@@ -1235,9 +1266,9 @@ function drawDetail(box,it){
   xb.onclick=e=>{if(e)e.stopPropagation();closeSel()};
   const nm=h("div","nm",c);
   if(it.no){const a=h("a","namelink",nm);a.href="#";a.setAttribute("role","button");  // 샘플은 실제 MAS 로그인·접수 화면으로 보내지 않는다
-    a.title="샘플 — 실제 MAS로 이동하지 않습니다";
-    a.setAttribute("aria-label",(it.name||"이름 없음")+" — 샘플이라 실제 MAS 접수 상세로 열리지 않습니다");
-    a.onclick=e=>{e.preventDefault();toast("샘플에서는 실제 MAS로 이동하지 않습니다",3600)};
+    a.title="MAS 접수 상세 열기 (샘플 미리보기)";
+    a.setAttribute("aria-label",(it.name||"이름 없음")+" — MAS 접수 상세 열기 (샘플 미리보기)");
+    a.onclick=e=>{e.preventDefault();e.stopPropagation();masDemo(it)};
     h("span","nmtxt",a,it.name||"이름 없음");h("span","ext",a,"↗")}
   else h("span","nmname",nm,it.name||"이름 없음");
   h("span","badge"+dowClass(it),nm,it.k==="up"?(whenText(it)):((it.date||"")+" 완료"));
@@ -1515,25 +1546,25 @@ function takeData(res){
 //    이름·연락처·주소·접수번호는 모두 가상이다(010-0000-1001~ · 990001~).
 //    날짜는 월~일이 모두 나오게, 미확정 3건·완료 4건을 섞어 두었다.
 const SAMPLE_UP=[
- {k:"up",date:"11/27(금)",time:"09:30",gu:"남구",name:"김민준",ld:"삼산동",addr:"울산 남구 번영로 143, 101동 101호",model:"V7",sym:"동작 중 덜컹 소리",no:"990001",ph:"010-0000-1001",memo:"공동현관 비밀번호 1234#"},
- {k:"up",date:"11/27(금)",time:"14:00",gu:"중구",name:"이서연",ld:"성남동",addr:"울산 중구 중앙로 88, 102동 1503호",model:"V4",sym:"마사지 강도가 약함",no:"990002",ph:"010-0000-1002",memo:""},
- {k:"up",date:"11/28(토)",time:"11:00",gu:"남구",name:"박도윤",ld:"옥동",addr:"울산 남구 옥현로 55, 103동 802호",model:"V6",sym:"리모컨 반응 없음",no:"990003",ph:"010-0000-1003",memo:""},
- {k:"up",date:"11/29(일)",time:"10:30",gu:"북구",name:"정하은",ld:"화봉동",addr:"울산 북구 화봉로 21, 104동 210호",model:"V3",sym:"온열이 안 따뜻함",no:"990004",ph:"010-0000-1004",memo:""},
- {k:"up",date:"11/30(월)",time:"09:00",gu:"동구",name:"최시우",ld:"방어동",addr:"울산 동구 방어진로 77, 105동 1201호",model:"V7",sym:"등받이 각도 고정 안 됨",no:"990005",ph:"010-0000-1005",memo:""},
- {k:"up",date:"11/30(월)",time:"13:30",gu:"남구",name:"강지우",ld:"야음동",addr:"울산 남구 야음로 30, 101동 505호",model:"V4",sym:"작동 중 소음",no:"990006",ph:"010-0000-1006",memo:""},
- {k:"up",date:"12/1(화)",time:"10:00",gu:"중구",name:"윤서준",ld:"태화동",addr:"울산 중구 태화로 120, 106동 302호",model:"V6",sym:"전원이 꺼졌다 켜짐",no:"990007",ph:"010-0000-1007",memo:""},
- {k:"up",date:"12/1(화)",time:"15:00",gu:"북구",name:"임채원",ld:"호계동",addr:"울산 북구 호계로 64, 107동 1702호",model:"V5",sym:"롤러가 중간에 멈춤",no:"990008",ph:"010-0000-1008",memo:""},
- {k:"up",date:"12/2(수)",time:"09:30",gu:"동구",name:"한지민",ld:"화정동",addr:"울산 동구 화정로 12, 108동 601호",model:"V7",sym:"열선 일부만 따뜻함",no:"990009",ph:"010-0000-1009",memo:""},
- {k:"up",date:"12/3(목)",time:"11:30",gu:"남구",name:"오준혁",ld:"무거동",addr:"울산 남구 대학로 155, 109동 1001호",model:"V4",sym:"동작 중 자주 멈춤",no:"990010",ph:"010-0000-1010",memo:""},
- {k:"up",date:"미확정",time:"",gu:"중구",name:"서지안",ld:"다운동",addr:"울산 중구 다운로 45, 110동 803호",model:"V6",sym:"구동부에서 소리",no:"990011",ph:"010-0000-1011",memo:"방문 시간은 문자로 조정"},
- {k:"up",date:"미확정",time:"",gu:"북구",name:"권유진",ld:"양정동",addr:"울산 북구 양정로 18, 111동 1502호",model:"V3",sym:"전원이 안 켜짐",no:"990012",ph:"010-0000-1012",memo:""},
- {k:"up",date:"미확정",time:"",gu:"남구",name:"문태호",ld:"신정동",addr:"울산 남구 신정로 200, 112동 401호",model:"V7",sym:"에어 압력이 약함",no:"990013",ph:"010-0000-1013",memo:""}
+ {k:"up",date:"11/27(금)",time:"09:30",gu:"남구",name:"김민준",ld:"삼산동",addr:"울산 남구 번영로 143, 101동 101호",model:"V9 시그니처",sym:"내부투광기 수직 이동소음",no:"990001",ph:"010-0000-1001",memo:"무상 (2027-03-14까지) / 🧰 챙길 자재 (같은 모델·증상 61건): 속천 36/61건 — 재고 12 · TR 속천 23/61건 — 재고 4 / 🏠 집에서 차로 54분 (첫 방문) / 🚗 다음 일정 이서연(14:00 중구)까지 차로 5분"},
+ {k:"up",date:"11/27(금)",time:"14:00",gu:"중구",name:"이서연",ld:"성남동",addr:"울산 중구 중앙로 88, 102동 1503호",model:"V6",sym:"7022 (리모콘 통신 단선 M-R)",no:"990002",ph:"010-0000-1002",memo:"유상 (무상 2025-08-02 종료) / 🧰 챙길 자재 (같은 모델·증상 45건): 리모컨 케이블 38/45건 — 재고 49 / 🚗 앞 일정 김민준(09:30 남구)에서 차로 5분"},
+ {k:"up",date:"11/28(토)",time:"11:00",gu:"남구",name:"박도윤",ld:"옥동",addr:"울산 남구 옥현로 55, 103동 802호",model:"메디스파프로",sym:"실키샷 외관불량",no:"990003",ph:"010-0000-1003",memo:"⏰ 시간고정 (\"오전 11시 이후만 가능\") · 무상 (2027-01-20까지) / 🧰 챙길 자재 (같은 모델·증상 65건): ESK-2405_핸드피스_(실키샷) 43/65건 — 재고 2 ⚠"},
+ {k:"up",date:"11/29(일)",time:"10:30",gu:"북구",name:"정하은",ld:"화봉동",addr:"울산 북구 화봉로 21, 104동 210호",model:"V3K",sym:"본체외관이상",no:"990004",ph:"010-0000-1004",memo:"🔁 1년 내 동일 증상 재접수 (이전 2026-04-08 990104: 본체외관이상 → 메인매트커버 조합) — 동일 부품 교체 시 무상 / 🧰 챙길 자재 (같은 모델·증상 32건): 메인매트커버 조합 25/32건 — 재고 4 · 서브매트커버 24/32건 — 재고 5"},
+ {k:"up",date:"11/30(월)",time:"09:00",gu:"동구",name:"최시우",ld:"방어동",addr:"울산 동구 방어진로 77, 105동 1201호",model:"V11",sym:"본체 리클라이닝 작동소음",no:"990005",ph:"010-0000-1005",memo:"무상 (2027-09-02까지) / 📍 차로 20분 이내: 한지민(12/2 09:30) 6분"},
+ {k:"up",date:"11/30(월)",time:"13:30",gu:"남구",name:"강지우",ld:"야음동",addr:"울산 남구 야음로 30, 101동 505호",model:"V7",sym:"1114 (내부투광기 고온)",no:"990006",ph:"010-0000-1006",memo:"💳 결제예정 85,000원 / 🧰 챙길 자재 (같은 모델·증상 22건): 1열 온도센서 조합 19/22건 — 재고 6 · 2열 온도센서 조합 19/22건 — 재고 5 / 🚗 앞 일정 최시우(09:00 동구)에서 차로 21분"},
+ {k:"up",date:"12/1(화)",time:"10:00",gu:"중구",name:"윤서준",ld:"태화동",addr:"울산 중구 태화로 120, 106동 302호",model:"M6",sym:"에어 불량",no:"990007",ph:"010-0000-1007",memo:"📅 날짜고정 / 🧰 챙길 자재 (같은 모델·증상 34건): M6_메인보드 15/34건 — 재고 1 ⚠ · M6_펌프레이션 14/34건 — 재고 3"},
+ {k:"up",date:"12/1(화)",time:"15:00",gu:"북구",name:"임채원",ld:"호계동",addr:"울산 북구 호계로 64, 107동 1702호",model:"V4",sym:"복부 진동도자 작동불량",no:"990008",ph:"010-0000-1008",memo:"무상 (2026-12-20까지) / 🧰 챙길 자재 (같은 모델·증상 17건): HB DC 모터 조합 8/17건 — 재고 5 · HB PCB 8/17건 — 재고 3 / 🚗 앞 일정 윤서준(10:00 중구)에서 차로 24분"},
+ {k:"up",date:"12/2(수)",time:"09:30",gu:"동구",name:"한지민",ld:"화정동",addr:"울산 동구 화정로 12, 108동 601호",model:"V6",sym:"커프스 마사지 작동불량",no:"990009",ph:"010-0000-1009",memo:"⚠ 무상 끝난 지 12일 — 안내 주의 / 🧰 챙길 자재 (같은 모델·증상 72건): 커프스 마사지 조합 (Black) 4/72건 — 재고 1 ⚠"},
+ {k:"up",date:"12/3(목)",time:"11:30",gu:"남구",name:"오준혁",ld:"무거동",addr:"울산 남구 대학로 155, 109동 1001호",model:"M10",sym:"안마모듈(상) 작동불량",no:"990010",ph:"010-0000-1010",memo:"📞 오늘 먼저 통화 — 비고 \"사용 중 멈춤, 빠른 방문 요청\" / 무상 (2027-06-11까지)"},
+ {k:"up",date:"미확정",time:"",gu:"중구",name:"서지안",ld:"다운동",addr:"울산 중구 다운로 45, 110동 803호",model:"V9 시그니처",sym:"서브매트 인식 불량",no:"990011",ph:"010-0000-1011",memo:"오늘 접수 — 오늘 컨택하면 D+0 / 📍 차로 20분 이내: 윤서준(12/1 10:00) 9분 · 이서연(11/27 14:00) 12분"},
+ {k:"up",date:"미확정",time:"",gu:"북구",name:"권유진",ld:"양정동",addr:"울산 북구 양정로 18, 111동 1502호",model:"M8",sym:"소음불량",no:"990012",ph:"010-0000-1012",memo:"⚠ 영업일 D+2 미컨택 — 재연락 1순위 / 📍 차로 20분 이내: 임채원(12/1 15:00) 7분"},
+ {k:"up",date:"미확정",time:"",gu:"남구",name:"문태호",ld:"신정동",addr:"울산 남구 신정로 200, 112동 401호",model:"V3K",sym:"H25(수직모터 엔코더 불량)",no:"990013",ph:"010-0000-1013",memo:"⚠ 영업일 D+1 미컨택 — 재연락 1순위 / 🧰 챙길 자재 (같은 모델·증상 20건): 감속모터 조합 (수직) 8/20건 — 재고 2 ⚠"}
 ];
 const SAMPLE_DONE=[
- {k:"done",date:"11/26",gu:"남구",name:"배수아",ld:"달동",model:"V4",no:"990014",tel:true,ph:"010-0000-1014",addr:"울산 남구 달삼로 33, 113동 704호"},
+ {k:"done",date:"11/26",gu:"남구",name:"배수아",ld:"달동",model:"V9 시그니처",no:"990014",tel:true,ph:"010-0000-1014",addr:"울산 남구 달삼로 33, 113동 704호"},
  {k:"done",date:"11/26",gu:"중구",name:"장현우",ld:"학성동",model:"V6",no:"990015",tel:false,ph:"010-0000-1015",addr:"울산 중구 학성로 90, 114동 205호"},
- {k:"done",date:"11/25",gu:"동구",name:"노은서",ld:"전하동",model:"V7",no:"990016",tel:true,ph:"010-0000-1016",addr:"울산 동구 전하로 8, 115동 1103호"},
- {k:"done",date:"11/25",gu:"북구",name:"심재원",ld:"송정동",model:"V3",no:"990017",tel:false,ph:"010-0000-1017",addr:"울산 북구 송정로 240, 116동 902호"}
+ {k:"done",date:"11/25",gu:"동구",name:"노은서",ld:"전하동",model:"메디스파프로",no:"990016",tel:true,ph:"010-0000-1016",addr:"울산 동구 전하로 8, 115동 1103호"},
+ {k:"done",date:"11/25",gu:"북구",name:"심재원",ld:"송정동",model:"M6",no:"990017",tel:false,ph:"010-0000-1017",addr:"울산 북구 송정로 240, 116동 902호"}
 ];
 // 지도에 찍는 자리(가상 좌표) — 행정동 경계 안, 서로 겹치지 않게 잡았다
 const SAMPLE_GEOX={"990001":[427.5,586.3],"990002":[367.5,536.3],"990003":[265.6,652.1],"990004":[511.9,381.6],"990005":[635.9,765.5],"990006":[482.8,667.4],"990007":[285.0,507.0],"990008":[507.9,261.2],"990009":[665.7,762.4],"990010":[163.8,585.0],"990011":[224.5,489.5],"990012":[570.7,546.3],"990013":[313.8,634.0],"990014":[368.9,609.3],"990015":[408.0,539.3],"990016":[695.0,682.2],"990017":[504.8,385.8]};
@@ -1571,6 +1602,40 @@ try{if(document.fonts&&document.fonts.ready&&document.fonts.ready.then)document.
     if(typeof w==="number"&&isFinite(w)&&w>0)it.lw=w}catch(e){}});applyView()})}catch(e){}
 loadMap(true);
 meAuto();
+</script>
+
+<script>
+/* ── 샘플 시연 화면: 가상 번호로 실제 전화가 걸리지 않게, 이름은 MAS 접수 상세 미리보기로 ── */
+(function(){
+  const bg=document.createElement("div");bg.className="demo-bg";bg.hidden=true;document.body.appendChild(bg);
+  const close=()=>{bg.hidden=true;bg.textContent=""};
+  bg.addEventListener("click",e=>{if(e.target===bg)close()});
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!bg.hidden)close()});
+  const mk=(t,c,p,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;if(p)p.appendChild(e);return e};
+  const find=v=>(typeof items!=="undefined"?items:[]).find(i=>i.ph&&String(v).replace(/\D/g,"")===String(i.ph).replace(/\D/g,""));
+  const dash=p=>String(p||"").replace(/^(\d{3})(\d{3,4})(\d{4})$/,"$1-$2-$3");
+  window.callDemo=function(ph){const it=find(ph);bg.textContent="";const c=mk("div","call",bg);
+    mk("div","av",c,"📞");mk("b",null,c,(it&&it.name?it.name+" 고객":"고객"));mk("div","num",c,dash(ph));
+    const g=mk("div","ing",c,"전화 연결 중 ");mk("i",null,g,"●●●");
+    mk("div","note",c,"샘플 번호라 실제로는 걸리지 않습니다. 실제 지도앱에서는 이 버튼 한 번으로 바로 통화가 연결됩니다.");
+    const x=mk("button",null,c,"✕");x.type="button";x.setAttribute("aria-label","닫기");x.onclick=close;bg.hidden=false};
+  window.masDemo=function(it){bg.textContent="";const m=mk("div","mas",bg);
+    const t=mk("div","top",m);mk("b",null,t,"세라젬 MAS · 접수 상세");mk("small",null,t,"샘플 미리보기");
+    const x=mk("button",null,t,"✕");x.type="button";x.setAttribute("aria-label","닫기");x.onclick=close;
+    mk("div","tag",m,"실제 지도앱에서는 고객 이름을 누르면 MAS가 이 접수 건 화면으로 바로 열립니다 (로그인 상태 유지). 여기서 처리이력 작성 · 완료 · 결제를 이어서 합니다.");
+    const sec=(h,rows)=>{const s=mk("div","sec",m);mk("h4",null,s,h);rows.forEach(([k,v,st])=>{if(!v)return;const r=mk("div","row",s);mk("span",null,r,k);const vv=mk("span",null,r);if(st)mk("em","st",vv,v);else vv.textContent=v})};
+    const when=it.k==="up"?(it.date==="미확정"?"미확정 (방문일 협의 중)":it.date+" "+(it.time||"")):it.date+" 완료";
+    sec("접수 정보",[["접수번호",it.no],["진행상태",it.k==="done"?"처리완료":(it.date==="미확정"?"접수":"배정완료"),true],["방문예정",when],["담당","울산 AS (샘플)"]]);
+    sec("고객 · 제품",[["고객명",it.name],["연락처",dash(it.ph)],["설치주소",it.addr],["제품",it.model],["불량증상",it.sym||"-"]]);
+    if(it.memo)sec("에이전트 메모",[["메모",it.memo]]);
+    const b=mk("div","btns",m);
+    [["처리이력 작성",""],["임시저장",""],["결제",""],["처리완료","pri"]].forEach(([l,c])=>{const bt=mk("button",c,b,l);bt.type="button";
+      bt.onclick=()=>{if(typeof toast==="function")toast("샘플 화면입니다 — 실제 MAS에서 이어서 처리합니다",2600)}});
+    bg.hidden=false};
+  // tel: 링크는 모두 시연 화면으로 (가상 번호로 실제 발신 방지)
+  document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest('a[href^="tel:"]');if(!a)return;
+    e.preventDefault();e.stopPropagation();callDemo(a.getAttribute("href").slice(4))},true);
+})();
 </script>
 </body>
 </html>
