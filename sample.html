@@ -94,6 +94,7 @@ svg#map.drag{cursor:grabbing}
 .g-nam{fill:var(--nam)} .g-jung{fill:var(--jung)} .g-buk{fill:var(--buk)} .g-dong{fill:var(--dong)}
 #map image.tile{pointer-events:none}
 .nat{fill:none;stroke:var(--jnl);stroke-width:.8;vector-effect:non-scaling-stroke;stroke-opacity:.35;pointer-events:none}
+#map.notile .natp{fill-opacity:.22}
 .natp{fill:var(--jn);fill-opacity:.06;stroke:var(--jnl);stroke-width:1.3;vector-effect:non-scaling-stroke;stroke-opacity:.6;pointer-events:none}
 .natd{fill:none;stroke:var(--jnl);stroke-width:.6;vector-effect:non-scaling-stroke;stroke-opacity:.3;stroke-dasharray:3 2;pointer-events:none}
 .plabel{fill:var(--muted);text-anchor:middle;pointer-events:none;font-family:var(--font);font-weight:700;opacity:.5;letter-spacing:.08em}
@@ -738,6 +739,10 @@ function drawTiles(){
     if((x1-x0+1)*(y1-y0+1)<=40||z<=5)break;
     z--;n=Math.pow(2,z);
   }
+  // 전국처럼 넓게 볼 때(z≤7)는 배경 그림을 깔지 않는다 — 그 축척 타일엔 'SOUTH KOREA' 같은 글자가 박혀 있고,
+  // 우리 시도·시군구 경계만으로도 모양이 충분히 보인다
+  if(z<=7){TILES.forEach(o=>{if(o.img.parentNode)o.img.parentNode.removeChild(o.img)});TILES.clear();svg.classList.add("notile");return}
+  svg.classList.remove("notile");
   const want=new Set();
   for(let tx=x0;tx<=x1;tx++)for(let ty=y0;ty<=y1;ty++){
     if(ty<0||ty>=n)continue;
