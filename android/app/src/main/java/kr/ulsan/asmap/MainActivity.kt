@@ -90,12 +90,41 @@ class MainActivity : Activity() {
             return true
         }
 
+        /**
+         * 세라젬 AS 앱을 열면서 '알림을 눌렀을 때'처럼 접수번호를 같이 실어 보낸다 (시험용).
+         * AS 앱은 google.message_id 가 붙은 실행 신호를 푸시 알림으로 보고, 나머지 값을 웹 MAS의
+         * Android.onPushMessage(…) 로 넘긴다. 웹 MAS가 어떤 이름을 쓰는지 몰라 흔한 이름을 같이 넣는다.
+         * 알아보지 못하면 그냥 첫 화면이 열린다 (데이터·결제는 건드리지 않음).
+         */
+        @JavascriptInterface
+        fun openAsReceipt(no: String): Boolean {
+            val pkg = "com.ceragem.as.android"
+            if (!Regex("^[0-9]{4,12}$").matches(no)) return openApp(pkg)
+            val path = "/asReceipt?asSubmitNo=$no"
+            val url = "https://mas.ceragem.com$path"
+            val push = Intent(Intent.ACTION_MAIN).apply {
+                setClassName(pkg, "$pkg.MainActivity")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                putExtra("google.message_id", "ulsanmap-" + System.currentTimeMillis())
+                for (k in listOf("url", "link", "linkUrl", "landingUrl", "targetUrl", "pageUrl", "moveUrl", "webUrl")) putExtra(k, url)
+                for (k in listOf("path", "menuUrl", "linkPath")) putExtra(k, path)
+                for (k in listOf("asSubmitNo", "submitNo", "receiptNo", "rcptNo", "no", "id")) putExtra(k, no)
+                putExtra("type", "AS_RECEIPT"); putExtra("title", "접수 $no"); putExtra("body", "접수 $no")
+            }
+            runOnUiThread {
+                if (isOurSite(Uri.parse(web.url ?: ""))) {
+                    try { startActivity(push) } catch (e: Exception) { openApp(pkg) }
+                }
+            }
+            return true
+        }
+
         @JavascriptInterface
         fun hasApp(pkg: String): Boolean =
             pkg in ALLOWED_APPS && packageManager.getLaunchIntentForPackage(pkg) != null
 
         @JavascriptInterface
-        fun version(): String = "1"
+        fun version(): String = "2"
     }
 
     private inner class Client : WebViewClient() {

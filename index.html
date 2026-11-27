@@ -1249,7 +1249,7 @@ function drawDetail(box,it){
   // [AS앱] — '울산 AS 지도' 앱(감싼 앱)으로 열었을 때만 보인다. 크롬에서는 사내 앱을 열 수 없어서 버튼을 안 만든다
   if(window.AsBridge){const ab=h("button","asapp",hd);ab.type="button";ab.setAttribute("aria-label","세라젬 AS 앱 열기");
     h("span",null,ab,"AS앱");
-    ab.onclick=e=>{e.stopPropagation();let ok=false;try{ok=window.AsBridge.openApp("com.ceragem.as.android")}catch(_){}
+    ab.onclick=e=>{e.stopPropagation();let ok=false;try{ok=(it.no&&typeof window.AsBridge.openAsReceipt==="function")?window.AsBridge.openAsReceipt(String(it.no)):window.AsBridge.openApp("com.ceragem.as.android")}catch(_){}
       if(!ok)toast("이 폰에 세라젬 AS 앱이 없어요",2600)}}
   const xb=h("button","xclose",hd);xb.type="button";xb.setAttribute("aria-label","목록으로 돌아가기");
   h("span","xi",xb,"✕");h("span",null,xb,"목록으로");
