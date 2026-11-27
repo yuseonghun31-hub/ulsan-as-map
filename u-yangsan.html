@@ -1449,7 +1449,7 @@ function drawRoute(s){const R=RT;if(!R)return;const box=h("div","rp",s);
   const tin=(t,k)=>{const i=document.createElement("input");i.type="time";i.value=hhmm(RS.set[k]);lab(t).appendChild(i);i.onchange=()=>{const v=tmin(i.value);if(v!=null){RS.set[k]=v;saveRS();refresh()}}};
   tin("첫 방문","t0");tin("종료","t1");
   const wi=document.createElement("input");wi.type="number";wi.min=10;wi.max=240;wi.step=5;wi.value=RS.set.w;lab("건당 작업(분)").appendChild(wi);wi.onchange=()=>{const v=Math.round(+wi.value);if(v>=5&&v<=480){RS.set.w=v;saveRS();refresh()}};
-  const bl=h("label",null,f);const bc=document.createElement("input");bc.type="checkbox";bc.checked=RS.set.bridge;bl.appendChild(bc);h("span",null,bl,"울산대교(유료) 이용");bc.onchange=()=>{RS.set.bridge=bc.checked;saveRS();refresh()};
+  const bl=h("label",null,f);if(!GUS.includes("동구"))bl.style.display="none";const bc=document.createElement("input");bc.type="checkbox";bc.checked=RS.set.bridge;bl.appendChild(bc);h("span",null,bl,"울산대교(유료) 이용");bc.onchange=()=>{RS.set.bridge=bc.checked;saveRS();refresh()};
   h("div","rsum",box,R.rows.length?(R.dep!=null?(PNAME[R.st.no]||"출발지")+"에서 "+hhmm(R.dep)+" 출발 · ":"")+"방문 "+R.rows.length+"건 · 이동 합계 "+R.travel+"분 · "+hhmm(R.end)+" 종료 예상":"이 날 경로에 든 건이 없습니다. 아래 목록에서 넣기를 누르세요.");
   if(R.late)h("div","rwarn",box,"예약 시간에 늦는 건이 있습니다(합계 "+R.late+"분). 넣은 건을 빼거나 시작 시간을 당겨 보세요.");
   if(R.over)h("div","rwarn",box,"종료 시간을 "+R.over+"분 넘깁니다.");
