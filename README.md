@@ -65,6 +65,16 @@
 이 저장소에는 고객 정보가 없습니다. 화면 코드와 행정동 중심 좌표만 있습니다.
 화면 맞춤에 쓰는 행정동 좌표는 통계청 2013 시군구 경계(공개)를 지도 좌표로 옮긴 것이고, 배경 지도는 Esri Light/Dark Gray Canvas(© Esri, HERE, Garmin, © OpenStreetMap contributors)입니다.
 
+## 지도 경계 출처
+
+`geo/dong-*.json` 과 `index.html`·`sample.html` 안의 `NATION`(시도·시군구 경계)은
+통계청 통계지리정보서비스(SGIS, https://sgis.kostat.go.kr)에서 공공누리 제1유형으로 개방한 행정동 경계를
+[vuski/admdongkor](https://github.com/vuski/admdongkor)가 가공한 2026-10판(CC BY 4.0)을
+지도앱 좌표로 바꾸고 간략화한 것입니다.
+
+본 데이터는 통계청 통계지리정보서비스(SGIS, https://sgis.kostat.go.kr)에서 공공누리 제1유형으로 개방한
+행정동 경계를 가공한 것이며(가공: vuski/admdongkor, https://github.com/vuski/admdongkor), CC BY 4.0으로 배포됩니다.
+
 ## 자료 연결
 
 `index.html` 의 `API` 상수가 가리키는 Apps Script 웹앱에 `?action=data&pin=…` 로 요청합니다.

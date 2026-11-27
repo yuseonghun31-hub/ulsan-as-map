@@ -1,20 +1,38 @@
 {
-  "name": "울산 AS 지도",
-  "short_name": "울산 AS 지도",
-  "description": "울산 AS 방문 일정과 동선 지도",
+  "name": "AS 맵",
+  "short_name": "AS 맵",
+  "description": "AS 방문 일정과 동선 지도",
   "lang": "ko",
   "dir": "ltr",
   "start_url": "./",
   "scope": "./",
   "id": "./",
   "display": "standalone",
-  "display_override": ["standalone", "minimal-ui"],
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
   "background_color": "#111615",
   "theme_color": "#111615",
   "prefer_related_applications": false,
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }
