@@ -431,12 +431,16 @@ h2 span{font-variant-numeric:tabular-nums;font-size:11.5px}
 /* 상세 카드 머리: 무엇을 연 건지 + 오른쪽 위 ✕ 닫기(터치 44px 이상) */
 .card .chead{display:flex;align-items:center;gap:8px;margin:0 0 3px}
 .card .chead .clab{font-size:11px;font-weight:700;letter-spacing:.02em;color:var(--accent)}
-.card .chead .xclose{margin-left:auto;display:inline-flex;align-items:center;justify-content:center;gap:6px;
+/* 접수번호가 있으면 카드 머리에 [AS앱] — 접수번호를 복사해 세라젬 AS 앱을 연다 */
+.card .chead .asapp{margin-left:auto;margin-right:8px;height:34px;padding:0 14px;border-radius:10px;border:1px solid var(--accent,#3ad6a7);background:transparent;color:var(--accent,#3ad6a7);font-weight:700;font-size:13px;-webkit-tap-highlight-color:transparent}
+.card .chead .asapp:active{transform:scale(.97);background:var(--accent-soft)}
+.card .chead .xclose{display:inline-flex;align-items:center;justify-content:center;gap:6px;
   min-height:44px;min-width:88px;padding:0 14px;border-radius:12px;border:1px solid var(--line);
   background:var(--panel-2);color:var(--ink);font:inherit;font-size:13.5px;font-weight:700;cursor:pointer;
   -webkit-tap-highlight-color:transparent}
 .card .chead .xclose:active{transform:scale(.97);background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
 .card .chead .xclose .xi{font-size:15px;font-weight:700;line-height:1}
+.card .chead .clab+.xclose{margin-left:auto}   /* 접수번호가 없어 AS앱 버튼이 없을 때도 ✕는 오른쪽 끝에 */
 /* 상세 카드 안의 번호는 전화 링크 — 버튼 모양 대신 글자 그대로 둔다 */
 .card a.tellink{color:var(--ink);font-weight:650;background:none;border:0;padding:0;border-radius:0;
   font-size:inherit;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;
@@ -1243,6 +1247,15 @@ function drawDetail(box,it){
   const c=h("div","card",box);
   ME.row=null;ME.rowMissing=false;
   const hd=h("div","chead",c);h("span","clab",hd,"선택한 고객");
+  if(it.no){const ab=h("button","asapp",hd);ab.type="button";ab.setAttribute("aria-label","세라젬 AS 앱 열기 (접수번호 복사)");  // 접수번호를 복사해 AS 앱을 열고, 앱이 없으면 웹 MAS 접수 화면으로
+    h("span",null,ab,"AS앱");
+    ab.onclick=e=>{e.stopPropagation();
+      const web="https://mas.ceragem.com/asReceipt?asSubmitNo="+encodeURIComponent(it.no);
+      let gone=false;const go=()=>{if(gone)return;gone=true;
+        location.href="intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=com.ceragem.as.android;S.browser_fallback_url="+encodeURIComponent(web)+";end"};
+      toast("접수번호 "+it.no+" 복사됨 — 앱에서 붙여넣기",2600);
+      try{navigator.clipboard.writeText(String(it.no)).then(go,go)}catch(_){go()}
+      setTimeout(go,300)}}
   const xb=h("button","xclose",hd);xb.type="button";xb.setAttribute("aria-label","목록으로 돌아가기");
   h("span","xi",xb,"✕");h("span",null,xb,"목록으로");
   xb.onclick=e=>{if(e)e.stopPropagation();closeSel()};
