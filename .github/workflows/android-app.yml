@@ -38,7 +38,7 @@ jobs:
       - name: 파일 이름 정리
         run: cp android/app/build/outputs/apk/debug/app-debug.apk ulsan-as-map.apk
 
-      - name: Releases에 올리기 (항상 같은 주소: releases/latest/download/ulsan-as-map.apk)
+      - name: Releases에 올리기
         uses: softprops/action-gh-release@v2
         with:
           tag_name: app-v${{ github.run_number }}
