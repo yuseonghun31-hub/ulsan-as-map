@@ -1477,7 +1477,7 @@ const LD0={};DONE.forEach(r=>LD0[r[5]]=r[3]);UP.forEach(r=>LD0[r[8]]=r[4]);
 const norm=s=>String(s||"").replace(/\[\d+\]/g,"").replace(/울산광역시/g,"울산").replace(/[\s,()]/g,"");
 const shortM=s=>{const m=String(s||"").match(/\(([^()]+)\)\s*$/);return m?m[1]:String(s||"")};
 function ldOf(gu,addr,no){const a=String(addr||"");let m=a.match(/\s([가-힣]+[읍면])\s/);if(m)return m[1];m=a.match(/\(([가-힣]+\d*[동리가])/);if(m)return m[1];return LD0[no]||""}
-function guOf(g,addr){g=String(g||"");if(GUS.includes(g))return g;const a=String(addr||"");for(const x of GUS)if(g.includes(x)||a.includes(x))return x;return g}
+function guOf(g,addr){return String(g||"")}
 function parseUp(v){const out=[];let date="";(v||[]).forEach(r=>{const a=String(r[0]||"");const m=a.match(/(\d+)월\s*(\d+)일\s*\((.)\)/);if(m){date=m[1]+"/"+m[2]+"("+m[3]+")";return}
   if(a.includes("미확정")&&a.includes("현황")){date="미확정";return}
   const no=String(r[8]||"").trim();if(!/^\d{5,}$/.test(no))return;const t=String(r[1]||"").trim();const addr=String(r[5]||"");

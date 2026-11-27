@@ -76,8 +76,7 @@ def build(cfg, base):
                  + ", SKIPD=" + json.dumps(skip, ensure_ascii=False) + ";")
     # ③ 주소 → 구역·동 (울산 전용 규칙 대신 담당 구역 이름으로)
     s = sub_once(s, r"function guOf\(g,addr\)\{[^\n]*\}\n",
-                 'function guOf(g,addr){g=String(g||"");if(GUS.includes(g))return g;const a=String(addr||"");'
-                 'for(const x of GUS)if(g.includes(x)||a.includes(x))return x;return g}\n')
+                 'function guOf(g,addr){return String(g||"")}\n')   # 시트의 지역구 칸을 그대로 (주소로 추측하면 울산 북구가 부산 북구로 섞임)
     s = sub_once(s, r"function ldOf\(gu,addr,no\)\{[^\n]*\}\n",
                  'function ldOf(gu,addr,no){const a=String(addr||"");let m=a.match(/\\s([가-힣]+[읍면])\\s/);if(m)return m[1];'
                  'm=a.match(/\\(([가-힣]+\\d*[동리가])/);if(m)return m[1];return LD0[no]||""}\n')
