@@ -29,10 +29,22 @@ jobs:
         with:
           gradle-version: "8.9"
 
+      # 서명 키는 저장소(공개)에 두지 않고 GitHub 비밀값에서 꺼낸다.
+      # 저장소 Settings → Secrets and variables → Actions → ANDROID_KEYSTORE_B64
+      # (원본은 형님 PC: 문서\my-agent\앱서명키 — 잃어버리면 다음 앱은 지우고 새로 깔아야 함)
       - name: 서명 키 고정 (매번 같은 키라야 다시 깔 때 지우지 않고 업데이트됨)
-        run: mkdir -p ~/.android && base64 -d android/debug-keystore.b64 > ~/.android/debug.keystore
+        env:
+          KS: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+        run: |
+          if [ -z "$KS" ]; then
+            echo "::error::GitHub 비밀값 ANDROID_KEYSTORE_B64 가 없습니다 (Settings → Secrets and variables → Actions)"
+            exit 1
+          fi
+          echo "$KS" | base64 -d > /dev/null   # 값이 망가졌으면 여기서 멈춘다
 
       - name: APK 빌드
+        env:
+          ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
         run: gradle -p android assembleDebug --no-daemon
 
       - name: 파일 이름 정리
