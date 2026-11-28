@@ -579,7 +579,7 @@ html.locked,html.locked body{overflow:hidden}
     <div class="cmpbar" id="cmpbar" aria-live="polite" hidden></div>
     <div class="sbody" id="side"></div>
   </section>
-</main></main>
+</main>
 <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 <script>
 // ── 데이터 서버(Apps Script) + PIN 잠금 ─────────────────────────────────
@@ -588,13 +588,25 @@ html.locked,html.locked body{overflow:hidden}
 const API=(()=>{try{return localStorage.getItem("asmap.api")||""}catch(e){return ""}})();
 const PKEY="asmap.pin";
 let PIN="";
-function pinLoad(){try{PIN=localStorage.getItem(PKEY)||""}catch(e){PIN=""}return PIN}
-function pinSave(v){PIN=v;try{localStorage.setItem(PKEY,v)}catch(e){}}
-function pinForget(){PIN="";try{localStorage.removeItem(PKEY)}catch(e){}}
+// 자동 잠금: 마지막으로 쓴 지 12시간이 지나면 PIN을 잊고 다시 묻는다(폰을 잃어버려도 바로 열리지 않게)
+const PAT="asmap.pinAt",PIN_TTL=12*3600e3,DKEY="asmap.data";
+function pinExpired(){try{const at=+localStorage.getItem(PAT)||0;return !!PIN&&at>0&&Date.now()-at>PIN_TTL}catch(e){return false}}
+function pinTouch(){try{if(PIN)localStorage.setItem(PAT,String(Date.now()))}catch(e){}}
+function pinLoad(){try{PIN=localStorage.getItem(PKEY)||"";
+    if(PIN&&!localStorage.getItem(PAT))pinTouch();          // 이 기능 전부터 저장돼 있던 PIN은 지금부터 센다
+    if(pinExpired())pinForget()}catch(e){PIN=""}return PIN}
+function pinSave(v){PIN=v;try{localStorage.setItem(PKEY,v)}catch(e){}pinTouch()}
+function pinForget(){PIN="";try{localStorage.removeItem(PKEY);localStorage.removeItem(PAT);localStorage.removeItem(DKEY)}catch(e){}}   // 잠그면 폰에 둔 시트 저장본도 지운다
 function parseJSON(t){try{return JSON.parse(t)}catch(e){return null}}
 function apiGet(q,pin){const u=API+"?"+q+(pin?"&pin="+encodeURIComponent(pin):"");
   return fetch(u,{cache:"no-store"}).then(r=>r.text()).then(parseJSON)}
 function apiPost(o){return fetch(API,{method:"POST",body:JSON.stringify(o)}).then(r=>r.text()).then(parseJSON)}
+// PIN은 주소(URL)에 싣지 않고 본문(POST)으로 보낸다 — 주소는 기록에 남기 쉽다.
+// 아직 옛 시트 스크립트(POST로 자료를 못 주는 버전)면 예전처럼 주소로 다시 묻는다.
+function apiCall(action,extra,pin){const o=Object.assign({action,pin},extra||{});
+  const old=res=>!res||(res.ok!==true&&!res.unauthorized);      // PIN은 맞는데 자료가 안 왔다 = POST를 모르는 서버
+  const viaGet=()=>apiGet("action="+encodeURIComponent(action)+Object.keys(extra||{}).map(k=>"&"+k+"="+encodeURIComponent(extra[k])).join(""),pin);
+  return apiPost(o).then(res=>old(res)?viaGet():res,()=>viaGet())}
 const GEO={"dongs":[{"n":"물금읍","g":"양산시","d":"M-521,1325L-534,1326L-583,1311L-588,1323L-613,1334L-646,1367L-655,1393L-655,1414L-673,1406L-684,1422L-679,1444L-651,1495L-637,1507L-598,1528L-572,1559L-547,1444L-537,1355Z","c":[-614,1436],"a":21973},{"n":"동면","g":"양산시","d":"M-197,1284L-222,1247L-234,1243L-246,1228L-256,1197L-285,1163L-296,1181L-297,1195L-327,1242L-318,1256L-321,1268L-314,1284L-322,1304L-319,1331L-328,1346L-348,1346L-357,1358L-380,1358L-398,1352L-429,1359L-440,1369L-446,1386L-485,1365L-499,1373L-522,1375L-541,1386L-547,1444L-572,1559L-564,1579L-523,1561L-511,1559L-484,1569L-469,1553L-449,1553L-452,1540L-446,1524L-421,1496L-406,1511L-382,1517L-334,1468L-310,1467L-291,1457L-274,1461L-270,1458L-261,1408L-245,1397L-238,1373L-223,1362L-226,1346L-223,1327L-216,1320L-219,1311L-212,1300L-197,1290Z","c":[-338,1371],"a":61250},{"n":"원동면","g":"양산시","d":"M-432,640L-434,621L-487,639L-566,654L-576,651L-573,636L-619,633L-636,658L-633,676L-661,698L-669,711L-719,703L-723,707L-735,720L-743,739L-726,747L-724,755L-701,774L-715,795L-707,810L-709,824L-699,832L-697,841L-701,880L-753,908L-776,901L-801,914L-819,912L-846,919L-852,929L-873,944L-875,959L-884,966L-880,979L-836,1014L-832,1031L-862,1052L-883,1044L-892,1036L-929,1056L-926,1069L-931,1094L-941,1096L-967,1121L-961,1160L-974,1164L-986,1182L-969,1219L-942,1238L-925,1241L-883,1239L-849,1252L-809,1290L-772,1337L-727,1354L-700,1370L-692,1383L-684,1422L-673,1406L-655,1414L-655,1393L-646,1367L-613,1334L-587,1323L-583,1311L-593,1290L-593,1266L-588,1256L-577,1256L-577,1242L-603,1220L-599,1186L-608,1177L-623,1175L-630,1166L-647,1167L-658,1153L-656,1139L-660,1127L-671,1113L-664,1093L-652,1085L-660,1058L-654,1038L-614,1022L-597,1022L-594,1016L-610,1000L-619,973L-625,971L-630,958L-631,904L-610,885L-604,866L-605,851L-598,833L-561,833L-548,816L-554,802L-547,781L-535,767L-537,758L-531,751L-508,743L-495,712L-484,699L-445,682L-442,646Z","c":[-715,1021],"a":164098},{"n":"상북면","g":"양산시","d":"M-548,816L-561,833L-571,830L-600,836L-610,885L-631,904L-633,951L-625,971L-619,973L-610,1000L-594,1016L-593,1029L-572,1032L-565,1062L-551,1071L-548,1081L-519,1097L-522,1117L-518,1140L-492,1198L-487,1201L-474,1193L-462,1203L-444,1195L-430,1198L-411,1195L-404,1188L-390,1188L-360,1173L-346,1174L-339,1169L-323,1172L-289,1157L-281,1099L-310,1083L-315,1018L-341,1004L-383,1002L-403,995L-404,963L-427,950L-427,939L-436,928L-439,879L-451,876L-459,865L-454,851L-501,828Z","c":[-469,1008],"a":76132},{"n":"하북면","g":"양산시","d":"M-311,747L-329,747L-342,733L-416,705L-445,682L-484,699L-495,712L-508,743L-531,751L-537,758L-535,767L-547,782L-554,804L-551,813L-541,820L-506,826L-454,851L-459,865L-451,876L-439,879L-436,928L-427,939L-427,950L-404,963L-404,995L-383,1002L-341,1004L-315,1018L-310,1083L-282,1097L-285,1110L-278,1111L-256,1085L-242,1085L-232,1080L-235,1066L-230,1052L-211,1018L-184,995L-184,979L-164,946L-181,929L-193,901L-214,891L-233,868L-249,833L-272,815L-277,801L-273,790L-281,778L-281,758L-293,749L-302,753Z","c":[-321,896],"a":76866},{"n":"삼성동","g":"양산시","d":"M-285,1163L-289,1157L-296,1157L-323,1172L-339,1169L-346,1174L-364,1175L-390,1188L-404,1188L-411,1195L-430,1198L-444,1195L-465,1202L-507,1300L-479,1290L-460,1293L-454,1304L-430,1320L-421,1305L-401,1300L-396,1290L-378,1286L-372,1290L-344,1262L-327,1253L-327,1242L-297,1195L-296,1181Z","c":[-402,1237],"a":17819},{"n":"강서동","g":"양산시","d":"M-511,1311L-464,1198L-474,1193L-487,1201L-492,1197L-518,1140L-522,1117L-519,1097L-548,1081L-551,1071L-565,1062L-572,1032L-592,1029L-596,1021L-614,1022L-654,1038L-660,1058L-652,1085L-664,1093L-671,1113L-660,1127L-656,1139L-658,1153L-647,1167L-630,1166L-623,1175L-608,1177L-599,1187L-603,1220L-577,1242L-577,1256L-589,1257L-594,1274L-593,1290L-583,1311L-534,1326L-521,1325Z","c":[-564,1174],"a":32638},{"n":"서창동","g":"양산시","d":"M1,1021L7,992L-11,964L-38,981L-63,989L-84,986L-105,992L-104,1010L-94,1016L-92,1041L-121,1083L-115,1131L-122,1144L-100,1164L-55,1179L-17,1170L2,1152L9,1155L19,1134L30,1122L32,1110L59,1080L53,1062L34,1039L6,1030Z","c":[-28,1069],"a":25190},{"n":"소주동","g":"양산시","d":"M-105,1008L-106,984L-118,980L-151,950L-164,946L-167,950L-169,959L-184,979L-183,993L-212,1019L-235,1066L-232,1080L-243,1086L-231,1107L-235,1120L-230,1144L-219,1152L-179,1148L-147,1153L-133,1160L-115,1131L-121,1083L-92,1041L-94,1016Z","c":[-166,1055],"a":20408},{"n":"평산동","g":"양산시","d":"M-243,1086L-256,1085L-278,1111L-285,1111L-289,1157L-256,1197L-246,1228L-234,1243L-222,1247L-212,1261L-206,1237L-185,1235L-187,1226L-170,1219L-151,1196L-129,1184L-133,1160L-147,1153L-179,1148L-216,1152L-230,1144L-235,1120L-231,1107Z","c":[-205,1172],"a":12793},{"n":"덕계동","g":"양산시","d":"M-17,1170L-58,1178L-69,1172L-89,1170L-122,1144L-133,1160L-129,1184L-151,1196L-170,1219L-187,1226L-188,1234L-151,1244L-129,1262L-115,1262L-113,1271L-98,1280L-77,1290L-66,1290L-43,1265L-20,1255L-6,1224L-2,1200L-17,1182Z","c":[-86,1217],"a":14792},{"n":"중앙동","g":"양산시","d":"M-498,1373L-483,1365L-446,1386L-440,1369L-429,1359L-398,1352L-380,1358L-357,1358L-348,1346L-329,1347L-318,1331L-322,1304L-314,1284L-321,1268L-318,1256L-325,1250L-337,1256L-367,1286L-396,1290L-401,1300L-421,1305L-430,1320L-454,1304L-459,1293L-478,1290L-491,1294L-501,1323L-493,1343Z","c":[-374,1318],"a":12683},{"n":"양주동","g":"양산시","d":"M-498,1373L-493,1343L-501,1323L-491,1294L-507,1300L-526,1333L-537,1355L-541,1386L-522,1375Z","c":[-512,1340],"a":2312},{"n":"온산읍","g":"울주군","d":"M441,1149L470,1138L474,1129L469,1122L472,1110L458,1100L474,1097L490,1087L490,1070L469,1069L469,1058L472,1053L493,1056L498,1043L494,1024L496,1000L510,993L510,986L499,978L522,935L509,929L496,956L467,967L463,959L479,952L480,933L463,937L451,931L444,872L419,835L415,840L392,848L397,854L392,872L372,883L366,896L354,890L338,899L319,893L309,896L308,901L294,898L298,918L291,933L292,955L282,960L270,956L255,960L254,992L258,1006L268,1016L296,1025L308,1022L317,1008L336,1019L328,1039L339,1045L338,1063L327,1079L325,1092L365,1117L429,1139Z","c":[382,993],"a":44534},{"n":"언양읍","g":"울주군","d":"M44,276L32,268L12,244L-1,244L-14,265L-23,264L-28,274L-31,286L-27,300L-45,315L-65,317L-77,324L-86,336L-83,341L-107,341L-127,326L-141,340L-150,342L-169,323L-186,333L-193,332L-223,280L-248,277L-260,255L-279,245L-323,248L-328,260L-325,280L-296,335L-282,343L-262,344L-233,365L-235,409L-257,443L-263,463L-279,479L-276,489L-265,505L-248,502L-235,507L-210,516L-183,536L-167,567L-178,572L-186,586L-171,582L-158,598L-150,601L-130,592L-92,610L-68,602L-55,582L-38,574L-20,575L-16,581L-18,600L-12,606L14,592L18,583L9,578L3,561L6,521L2,496L-16,495L-14,473L-23,469L-31,458L-29,451L6,417L2,385L14,364L38,350L41,342L36,335L37,321L53,305L50,287Z","c":[-125,428],"a":74901},{"n":"온양읍","g":"울주군","d":"M294,898L282,887L254,880L238,887L237,898L220,915L186,914L163,921L147,910L141,917L125,925L114,923L107,913L95,910L70,931L51,931L42,943L45,952L26,961L21,994L7,999L1,1020L9,1033L34,1039L53,1062L60,1078L32,1110L30,1122L18,1135L9,1155L13,1168L27,1180L52,1189L94,1178L107,1183L125,1163L148,1171L157,1157L170,1166L197,1161L196,1135L209,1129L232,1141L225,1162L230,1174L246,1184L259,1186L274,1197L281,1194L290,1174L303,1162L308,1127L324,1097L339,1053L338,1044L328,1039L336,1018L317,1008L308,1022L296,1025L268,1016L256,1001L255,960L270,956L282,960L292,955L291,933L298,918Z","c":[180,1038],"a":71013},{"n":"범서읍","g":"울주군","d":"M292,212L277,203L272,193L254,180L247,187L228,175L209,181L181,169L166,147L147,186L137,192L132,204L134,232L128,261L99,248L85,249L53,274L44,276L50,287L53,305L37,321L36,335L41,342L38,350L14,364L2,385L6,417L-29,451L-31,458L-23,469L-14,473L-16,495L2,496L6,521L3,561L8,576L20,588L36,587L43,612L50,614L89,601L109,607L117,594L126,593L133,582L149,572L169,537L182,547L196,528L184,509L185,473L172,447L181,441L197,441L203,418L214,417L259,431L273,423L270,384L289,343L298,337L301,318L285,302L285,274L296,255L290,228Z","c":[138,380],"a":86282},{"n":"서생면","g":"울주군","d":"M441,1149L429,1139L365,1117L341,1099L325,1093L308,1127L303,1162L290,1174L281,1194L274,1197L259,1186L246,1184L230,1174L225,1163L232,1144L230,1140L209,1129L199,1132L197,1161L203,1179L231,1212L240,1237L250,1239L251,1248L244,1256L243,1272L255,1292L252,1311L240,1326L257,1335L269,1331L280,1347L304,1353L315,1371L328,1364L342,1367L353,1340L364,1336L369,1310L384,1303L387,1306L398,1304L409,1273L424,1271L434,1279L435,1286L443,1286L457,1274L468,1278L479,1274L491,1253L486,1234L470,1227L469,1207L438,1197L444,1169L449,1165L457,1170L460,1162L457,1157L447,1162Z","c":[359,1231],"a":41942},{"n":"청량읍","g":"울주군","d":"M134,607L89,601L45,613L25,644L21,662L35,691L54,695L70,708L80,736L73,748L79,755L82,771L95,776L95,790L101,795L116,771L126,770L147,779L149,789L169,808L170,832L161,834L153,854L141,864L114,869L110,894L123,898L129,918L136,921L147,910L163,921L186,914L220,915L237,898L238,887L254,880L282,887L302,901L319,893L338,899L353,890L366,896L372,883L391,873L397,854L392,848L415,840L419,835L413,808L394,796L359,796L359,773L343,773L338,757L328,750L305,760L271,711L266,711L261,681L245,676L242,670L247,668L225,653L219,644L224,632L202,627L188,630L166,615L162,619L146,617Z","c":[210,762],"a":65578},{"n":"웅촌면","g":"울주군","d":"M30,687L16,686L9,691L-8,713L-22,722L8,777L4,790L-3,793L-35,786L-46,794L-39,802L-47,830L-75,816L-108,817L-170,867L-182,891L-193,901L-172,940L-150,951L-118,980L-106,984L-103,991L-84,986L-63,989L-38,981L-11,964L7,992L7,999L21,994L26,961L45,952L42,943L51,931L70,931L95,910L107,913L108,920L115,924L133,921L125,911L123,898L110,894L114,869L141,864L153,854L161,834L170,832L169,808L149,789L147,779L126,770L116,771L101,795L97,792L95,776L82,771L79,755L73,748L80,736L70,708L54,695L40,695Z","c":[7,843],"a":57296},{"n":"두동면","g":"울주군","d":"M169,-3L103,-13L98,-30L80,-31L59,-50L42,-56L22,-80L6,-69L-14,-36L-11,-24L-1,-19L2,-6L-9,26L-4,32L-7,53L-23,72L-24,87L-55,101L-48,104L-45,116L-48,139L-44,149L-55,174L-68,161L-74,163L-76,178L-88,176L-94,183L-99,216L-110,239L-108,254L-94,279L-97,288L-107,293L-129,270L-159,312L-162,332L-155,339L-142,340L-127,326L-107,341L-83,341L-86,336L-77,324L-65,317L-45,315L-27,300L-31,286L-28,274L-23,264L-14,265L-1,244L12,244L32,268L44,276L53,274L85,249L99,248L128,261L134,232L132,204L137,192L147,186L166,147L163,125L180,101L183,76L176,61L188,52L187,24Z","c":[58,135],"a":69130},{"n":"두서면","g":"울주군","d":"M3,-59L-7,-58L-56,-86L-70,-57L-80,-53L-118,-55L-137,-80L-163,-91L-185,-77L-180,-67L-190,-56L-189,-48L-195,-44L-221,-53L-231,-28L-248,-25L-253,-31L-265,-29L-275,-24L-296,-23L-335,-7L-314,21L-306,42L-311,65L-300,92L-289,107L-288,123L-275,139L-271,158L-322,210L-335,216L-323,248L-287,244L-260,255L-248,277L-223,280L-192,333L-169,323L-162,332L-159,312L-127,269L-107,293L-99,291L-94,279L-108,254L-110,239L-99,216L-94,183L-88,176L-76,178L-74,163L-68,161L-55,174L-44,149L-48,139L-45,116L-48,104L-55,101L-24,87L-23,72L-7,53L-4,32L-9,26L2,-6L-1,-19L-11,-24L-14,-36L-10,-48Z","c":[-167,121],"a":87393},{"n":"상북면","g":"울주군","d":"M-323,248L-335,216L-322,210L-271,158L-275,139L-288,123L-289,107L-300,92L-311,65L-306,42L-314,21L-335,-7L-371,29L-393,71L-382,82L-399,106L-393,114L-397,153L-362,187L-358,209L-379,222L-408,199L-460,184L-467,198L-470,217L-490,251L-497,252L-525,236L-540,239L-555,260L-572,264L-592,295L-579,311L-555,309L-538,315L-531,357L-524,363L-531,401L-541,426L-583,451L-616,485L-674,506L-690,516L-681,547L-672,550L-660,570L-623,562L-609,584L-608,594L-619,633L-573,636L-576,651L-551,652L-487,639L-434,621L-431,625L-437,602L-418,589L-359,580L-334,586L-316,578L-306,564L-306,545L-298,537L-294,517L-265,508L-279,479L-263,463L-257,443L-235,409L-233,365L-262,344L-282,343L-296,335L-325,280L-328,260Z","c":[-418,322],"a":137148},{"n":"삼남읍","g":"울주군","d":"M-193,603L-178,572L-167,567L-183,536L-199,524L-248,502L-265,505L-271,512L-289,514L-297,521L-298,537L-305,544L-306,564L-321,581L-334,586L-359,580L-418,589L-437,602L-430,618L-432,640L-442,646L-445,682L-416,705L-342,733L-332,744L-318,750L-309,726L-313,716L-310,704L-302,697L-290,701L-254,659L-254,647L-242,629L-221,610Z","c":[-336,627],"a":34235},{"n":"삼동면","g":"울주군","d":"M18,583L13,592L-12,606L-18,600L-16,581L-20,575L-38,574L-55,582L-68,602L-92,610L-130,592L-150,601L-158,598L-166,586L-174,582L-188,590L-193,603L-221,610L-242,629L-254,647L-254,659L-290,701L-302,697L-310,704L-313,716L-309,726L-317,748L-311,747L-302,753L-293,749L-281,758L-281,778L-273,791L-277,800L-275,810L-249,833L-240,858L-208,896L-193,901L-182,891L-170,867L-108,817L-75,816L-47,830L-39,802L-46,794L-35,786L-3,793L4,789L8,777L-13,735L-22,725L9,691L16,686L30,687L21,667L22,652L45,613L40,608L37,587L26,589Z","c":[-162,738],"a":68917},{"n":"구포1동","g":"북구","d":"M-560,1830L-568,1831L-580,1815L-614,1802L-615,1821L-619,1825L-615,1829L-599,1827L-592,1842L-576,1834L-569,1844L-547,1850Z","c":[-595,1825],"a":1256},{"n":"구포2동","g":"북구","d":"M-586,1853L-599,1827L-615,1829L-619,1825L-634,1841L-627,1846L-638,1865L-629,1873L-620,1867L-600,1881Z","c":[-608,1850],"a":1852},{"n":"구포3동","g":"북구","d":"M-536,1852L-569,1844L-576,1834L-583,1836L-591,1842L-586,1853L-597,1877L-579,1878L-577,1891L-554,1889L-538,1895L-525,1874Z","c":[-560,1866],"a":2694},{"n":"금곡동","g":"북구","d":"M-450,1554L-469,1553L-484,1569L-511,1559L-523,1561L-563,1578L-569,1621L-598,1694L-594,1690L-559,1702L-563,1685L-550,1682L-520,1644L-512,1644L-497,1634L-488,1620L-477,1616L-474,1596Z","c":[-531,1626],"a":9549},{"n":"화명1동","g":"북구","d":"M-455,1708L-489,1704L-532,1706L-519,1714L-524,1725L-549,1712L-560,1722L-565,1746L-579,1760L-575,1763L-575,1785L-543,1762L-530,1762L-524,1753L-501,1747L-469,1745L-465,1760L-455,1745L-454,1736L-463,1734L-464,1727Z","c":[-518,1745],"a":5148},{"n":"덕천1동","g":"북구","d":"M-535,1761L-543,1762L-569,1784L-566,1791L-573,1795L-569,1812L-531,1805L-527,1800L-532,1798L-531,1771Z","c":[-550,1786],"a":1448},{"n":"덕천2동","g":"북구","d":"M-577,1772L-586,1774L-584,1758L-590,1753L-588,1767L-611,1762L-614,1802L-580,1815L-565,1832L-559,1829L-558,1821L-560,1816L-567,1818L-573,1795L-566,1791L-569,1784L-575,1785Z","c":[-590,1792],"a":2049},{"n":"덕천3동","g":"북구","d":"M-536,1852L-537,1842L-530,1831L-534,1816L-531,1805L-569,1812L-567,1818L-560,1816L-560,1830L-547,1850Z","c":[-544,1828],"a":1073},{"n":"만덕1동","g":"북구","d":"M-422,1739L-443,1741L-454,1736L-459,1754L-465,1760L-469,1745L-524,1753L-530,1762L-535,1761L-531,1771L-532,1798L-475,1802L-447,1808L-447,1799L-424,1761Z","c":[-481,1772],"a":5606},{"n":"만덕2동","g":"북구","d":"M-447,1808L-475,1802L-508,1802L-503,1809L-508,1824L-508,1845L-525,1874L-506,1867L-495,1856L-483,1852L-470,1856L-471,1842L-466,1843L-451,1825Z","c":[-486,1838],"a":2847},{"n":"만덕3동","g":"북구","d":"M-508,1802L-527,1800L-533,1809L-530,1831L-537,1848L-525,1874L-508,1845L-508,1824L-503,1809Z","c":[-521,1837],"a":1508},{"n":"화명2동","g":"북구","d":"M-455,1708L-448,1698L-453,1683L-465,1676L-465,1661L-456,1646L-461,1639L-489,1629L-512,1644L-520,1644L-550,1682L-563,1685L-560,1722L-549,1712L-524,1725L-519,1714L-532,1706L-489,1704Z","c":[-505,1677],"a":6291},{"n":"화명3동","g":"북구","d":"M-559,1702L-596,1691L-609,1720L-611,1762L-588,1767L-590,1753L-584,1758L-586,1774L-577,1772L-575,1763L-579,1760L-564,1744Z","c":[-586,1732],"a":3035},{"n":"서1동","g":"금정구","d":"M-308,1798L-295,1779L-299,1779L-303,1768L-313,1775L-319,1789Z","c":[-306,1784],"a":355},{"n":"서2동","g":"금정구","d":"M-276,1798L-302,1790L-308,1798L-282,1814L-271,1812Z","c":[-288,1800],"a":459},{"n":"금사회동동","g":"금정구","d":"M-168,1662L-183,1650L-193,1656L-217,1699L-250,1709L-264,1732L-281,1747L-278,1751L-285,1760L-269,1780L-276,1798L-270,1809L-251,1798L-244,1799L-249,1774L-247,1761L-219,1747L-209,1734L-208,1720L-193,1715L-177,1695Z","c":[-236,1729],"a":5826},{"n":"부곡1동","g":"금정구","d":"M-290,1740L-296,1737L-301,1750L-310,1755L-334,1752L-338,1768L-324,1769L-313,1775L-299,1765Z","c":[-316,1760],"a":739},{"n":"부곡2동","g":"금정구","d":"M-301,1750L-290,1725L-297,1716L-307,1723L-332,1721L-334,1752L-310,1755Z","c":[-313,1736],"a":1268},{"n":"부곡3동","g":"금정구","d":"M-183,1650L-178,1627L-210,1628L-222,1621L-233,1622L-269,1641L-286,1643L-297,1658L-300,1677L-313,1684L-317,1681L-335,1698L-332,1721L-307,1723L-297,1716L-290,1725L-296,1737L-281,1747L-264,1732L-250,1709L-217,1699L-205,1683L-197,1662Z","c":[-259,1684],"a":9742},{"n":"부곡4동","g":"금정구","d":"M-313,1775L-324,1769L-338,1768L-346,1784L-324,1789L-319,1795Z","c":[-329,1781],"a":517},{"n":"장전1동","g":"금정구","d":"M-369,1681L-399,1666L-414,1686L-418,1699L-415,1708L-403,1704L-374,1714L-368,1708L-356,1713L-352,1723L-333,1735L-333,1696L-348,1685Z","c":[-377,1700],"a":2717},{"n":"선두구동","g":"금정구","d":"M-253,1472L-291,1457L-310,1467L-311,1474L-307,1494L-302,1491L-293,1498L-295,1513L-284,1541L-289,1545L-293,1541L-317,1566L-320,1572L-309,1581L-315,1617L-302,1630L-302,1635L-290,1644L-269,1641L-241,1627L-237,1592L-224,1566L-229,1552L-211,1516L-212,1487L-236,1473Z","c":[-265,1551],"a":13533},{"n":"청룡노포동","g":"금정구","d":"M-309,1581L-320,1572L-312,1557L-293,1541L-289,1545L-284,1541L-295,1513L-293,1498L-308,1492L-310,1467L-334,1469L-382,1517L-406,1511L-421,1496L-446,1524L-452,1540L-450,1554L-419,1583L-373,1579L-358,1568L-337,1571L-327,1583Z","c":[-368,1525],"a":11833},{"n":"남산동","g":"금정구","d":"M-309,1581L-327,1583L-337,1571L-358,1568L-373,1579L-419,1583L-415,1621L-399,1638L-364,1626L-359,1622L-359,1613L-353,1612L-330,1626L-327,1635L-321,1638L-310,1623L-315,1615Z","c":[-365,1604],"a":5057},{"n":"구서1동","g":"금정구","d":"M-286,1645L-305,1636L-331,1659L-331,1665L-359,1666L-364,1669L-369,1681L-348,1685L-333,1696L-317,1681L-313,1684L-300,1677L-297,1658Z","c":[-321,1666],"a":2196},{"n":"구서2동","g":"금정구","d":"M-310,1623L-321,1638L-327,1635L-330,1626L-358,1612L-361,1624L-397,1638L-399,1666L-370,1681L-359,1666L-331,1665L-331,1659L-318,1645L-302,1635L-302,1630Z","c":[-360,1647],"a":3619},{"n":"금성동","g":"금정구","d":"M-419,1583L-450,1554L-474,1596L-475,1613L-488,1620L-493,1629L-461,1639L-456,1646L-465,1657L-465,1676L-453,1683L-448,1698L-464,1727L-462,1735L-447,1740L-422,1739L-414,1686L-399,1666L-397,1638L-415,1621Z","c":[-429,1647],"a":8986},{"n":"서3동","g":"금정구","d":"M-278,1751L-290,1740L-303,1768L-299,1779L-295,1779L-302,1790L-276,1798L-269,1780L-285,1760Z","c":[-288,1769],"a":1121},{"n":"장전2동","g":"금정구","d":"M-333,1735L-352,1723L-356,1713L-370,1708L-374,1714L-403,1704L-415,1708L-423,1729L-421,1753L-403,1750L-402,1756L-395,1757L-369,1752L-359,1762L-355,1759L-339,1770Z","c":[-378,1737],"a":3779}],"box":[-986,-91,522,1895]};
 let UP=[];
 let DONE=[];
@@ -844,15 +856,19 @@ function koreaView(){return fitRect(koreaBox())}
 function zoomAt(f,cx,cy){const kv=koreaView(),maxW=kv[2];
   selHome=null;                                        // 직접 확대·축소하면 닫을 때 되돌릴 화면은 버린다
   const w=Math.min(Math.max(vb[2]*f,VB0[2]/40),maxW);
-  if(f>1&&w>=maxW-1e-6){vb=kv.slice();vbDirty=true;applyView();return}   // 더 줄이면 대한민국 전체로 맞춘다
-  const r=w/vb[2];vb=[cx-(cx-vb[0])*r,cy-(cy-vb[1])*r,w,vb[3]*r];vbDirty=true;applyView()}
+  if(f>1&&w>=maxW-1e-6){vb=kv.slice();vbDirty=true;queueView();return}   // 더 줄이면 대한민국 전체로 맞춘다
+  const r=w/vb[2];vb=[cx-(cx-vb[0])*r,cy-(cy-vb[1])*r,w,vb[3]*r];vbDirty=true;queueView()}
+// 끌기·확대 중에는 손가락 이벤트가 1초에 수십~수백 번 온다 — 화면 그리기는 한 프레임에 한 번만
+let viewRaf=0;
+function queueView(){if(viewRaf)return;if(typeof requestAnimationFrame!=="function"){applyView();return}
+  viewRaf=requestAnimationFrame(()=>{viewRaf=0;applyView()})}
 function toMap(e){const r=svg.getBoundingClientRect();return[vb[0]+(e.clientX-r.left)/r.width*vb[2],vb[1]+(e.clientY-r.top)/r.height*vb[3]]}
 svg.addEventListener("wheel",e=>{e.preventDefault();const p=toMap(e);zoomAt(e.deltaY>0?1.2:1/1.2,p[0],p[1])},{passive:false});
 const ptrs=new Map();let pinch=0,ptr0=null,mdMoved=false;
 svg.addEventListener("pointerdown",e=>{ptrs.set(e.pointerId,[e.clientX,e.clientY]);ptr0=[e.clientX,e.clientY];mdMoved=false;svg.classList.add("drag")});
 window.addEventListener("pointermove",e=>{if(!ptrs.has(e.pointerId))return;const prev=ptrs.get(e.pointerId);const r=svg.getBoundingClientRect();
   if(ptr0&&Math.hypot(e.clientX-ptr0[0],e.clientY-ptr0[1])>7){mdMoved=true;selHome=null}   // 끌어서 지도를 옮긴 뒤에는 이름표 전화를 막고, 되돌릴 화면도 버린다
-  if(ptrs.size===1){vb[0]-=(e.clientX-prev[0])/r.width*vb[2];vb[1]-=(e.clientY-prev[1])/r.height*vb[3];vbDirty=true;ptrs.set(e.pointerId,[e.clientX,e.clientY]);applyView()}
+  if(ptrs.size===1){vb[0]-=(e.clientX-prev[0])/r.width*vb[2];vb[1]-=(e.clientY-prev[1])/r.height*vb[3];vbDirty=true;ptrs.set(e.pointerId,[e.clientX,e.clientY]);queueView()}
   else{ptrs.set(e.pointerId,[e.clientX,e.clientY]);const a=[...ptrs.values()];const d=Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1]);
     if(pinch){const mx=(a[0][0]+a[1][0])/2,my=(a[0][1]+a[1][1])/2;const p=toMap({clientX:mx,clientY:my});zoomAt(pinch/d,p[0],p[1])}pinch=d}});
 const up=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinch=0;if(!ptrs.size)svg.classList.remove("drag")};
@@ -1041,8 +1057,9 @@ function drawMenu(){const m=menuEl();if(!m)return;const keep=m.hidden;m.textCont
   add(themeNow()==="dark"?"낮으로 보기":"밤으로 보기",null,()=>setTheme(themeNow()==="dark"?"light":"dark"),null);
   if(ME.on||ME.pos)add("내 위치 끄기",null,()=>{meStop();meSave(false);meShow(false);drawMenu()},null);
   h("div","sep",m);
+  add("도움말",null,()=>openHelp(),null);
   add("지금 새로고침",null,()=>loadMap(true),null);
-  add("잠금","PIN 다시 묻기",()=>{pinForget();sheetState="wait";setAsof();rebuild();showGate("")},null);
+  add("잠금","PIN 다시 묻기",()=>lockNow(""),null);
   m.hidden=keep}
 // ── 아래 시트: 지도(위)와 목록·정보(아래)를 한 화면에서, 높이는 손가락으로 ──
 //    핸들(위 57px)을 끌면 손가락을 따라 높이가 변하고, 놓으면 가까운 단계(접힘/중간/크게)로 붙는다.
@@ -1168,6 +1185,7 @@ function ensurePinVisible(it){
   if(dx||dy){vb[0]+=dx*ux;vb[1]+=dy*uy;vbDirty=true;applyView();queueTiles()}}
 // 점·목록에서 고객을 고르면 시트에 정보 카드가 뜨고, 지도의 그 점이 이름표와 함께 강조된다
 function select(it,center){
+  helpOpen=false;                                              // 고객을 고르면 도움말은 닫는다
   if(state.sel===it){closeSel();return}
   if(!isWide()&&Math.abs(SH.h-SH.midH)>6)snapTo("mid");        // 지도와 정보가 함께 보이는 높이로
   if(!selHome){selHome=vb.slice();selHomeDirty=vbDirty}        // 닫을 때 돌아올 화면을 기억
@@ -1187,7 +1205,6 @@ function select(it,center){
   closeMenu();refresh();
   cmpEnsureView();                                             // 두 점 중 하나가 화면 밖이면 둘 다 보이게
   const s=document.getElementById("side");if(s)s.scrollTop=0}
-// 상세 카드를 닫는다: `✕ 목록으로` · 지도 빈 곳 · Esc · 같은 점을 다시 누를 때
 // 상세 카드를 닫는다: 카드의 ✕ 닫기 · 지도 빈 곳 · Esc · 같은 점을 다시 누를 때
 function closeSel(){if(!state.sel)return;state.sel=null;
   if(selHome){vb=selHome.slice();vbDirty=selHomeDirty;selHome=null}   // 상세가 옮겨 둔 화면을 원래대로
@@ -1195,6 +1212,7 @@ function closeSel(){if(!state.sel)return;state.sel=null;
 function mapTap(){if(legendOpen()){setLegend(false);return}if(state.sel)closeSel()}   // 지도 빈 곳(배경) 누르기 — 펼친 범례부터 접는다
 function escClose(e){if(!e||e.key!=="Escape")return false;
   if(menuOpen()){closeMenu();return true}
+  if(helpOpen){closeHelp();return true}
   if(legendOpen()){setLegend(false);return true}
   if(state.sel){closeSel();return true}
   if(CMP.from||CMP.to){cmpClear();return true}
@@ -1258,20 +1276,29 @@ function drawSheet(){drawHead();drawBody()}
 function drawHead(){
   const t=document.getElementById("stitle"),c=document.getElementById("scount"),f=document.getElementById("sfilter");
   const num=state.route&&RT?RT.rows.length:items.filter(visible).length;
-  if(t)t.textContent=state.sel?"고객 정보":(state.route?"경로 추천":"목록");
-  if(c)c.textContent=state.sel?(state.sel.gu||""):((state.route&&RT?"동선 ":"")+num+"건");
+  if(t)t.textContent=helpOpen?"도움말":state.sel?"고객 정보":(state.route?"경로 추천":"목록");
+  if(c)c.textContent=helpOpen?"":state.sel?(state.sel.gu||""):((state.route&&RT?"동선 ":"")+num+"건");
   if(f){
     if(state.sel)f.textContent=state.sel.k==="up"?whenText(state.sel):((state.sel.date||"")+" 완료");
     else{const bits=[];if(state.day)bits.push(state.day==="free"?"예약 없는 날":state.day);
       if(state.gu!=="전체")bits.push(state.gu);f.textContent=bits.join(" · ")}}
   const ch=document.getElementById("schev");if(ch)ch.textContent=(!isWide()&&SH.h>=SH.maxH-8)?"⌄":"⌃"}
 let bodyMode="",bodyScroll=0;
+// ── 도움말: 예전엔 목록·경로 아래에 늘 붙어 있던 사용 설명 — ⚙ 메뉴에서 열 때만 보인다 ──
+const HELP=[["지도와 목록","바탕 지도는 Esri 기본 지도(밝은/어두운 회색)이고, 경남·부산 시군구 경계를 옅게 깔았습니다. 지도 점 색은 예약된 요일마다 달고(왼쪽 아래 범례), 예약이 아직 없는 건은 흰 점, 완료 건은 회색 점입니다. 점이 서로 가리지 않게 이름표는 감추고 점만 크게 깔았습니다 — 이름표는 지도를 충분히 확대(14단계 이상)하거나 그 점을 고르면 나타납니다. 점을 누르면 아래 시트에 그 고객의 정보 카드가 떠서 전화·길찾기를 할 수 있고, 위쪽 지도에서는 그 점이 이름표와 함께 강조됩니다. `✕ 목록으로`·지도 빈 곳·Esc 키로 닫힙니다. 아래 시트는 맨 위 손잡이를 끌어 높이를 바꾸고(접힘·중간·크게), 손잡이를 한 번 톡 누르면 다음 단계로 넘어갑니다. 목록을 맨 위에서 아래로 당겨도 시트가 내려갑니다. 완료 포함·경로 추천·밤/낮·잠금은 오른쪽 위 ⚙ 메뉴에 있습니다. 예정 건은 시트 `좌표` 탭의 네이버 좌표에 찍고, 좌표를 못 찾은 건과 완료 건은 주소에 적힌 동의 가운데 부근에 찍습니다. 경계는 행정동 기준이라 신정동처럼 여러 행정동으로 나뉜 곳은 그 중간에 표시됩니다. 주소에 동이 적혀 있지 않은 완료 건은 지도에 없고 목록의 '동 확인 필요'에 있습니다. 고객 점을 잇달아 두 번 누르면 두 지점 사이 거리·시간이 ①→②로 이어지고(내 위치 청록 점을 누르면 내 위치에서 그 고객까지), 시트 맨 위 한 줄에서 ✕로 지웁니다. 구간 탭에 네이버 실측이 있으면 그 값, 없으면 직선거리로 어림해 (추정)을 붙입니다."],["경로 추천","확정 예약은 시간을 그대로 두고, 미확정 건을 이동 시간이 가장 적게 늘어나는 자리에 끼웠습니다. 이동 시간과 경로 선은 네이버 길찾기에서 받은 자동차 기준 값이고, 받은 시점의 교통 상황이 반영되어 있습니다. 주차와 건물 출입 시간은 들어 있지 않으니 건당 작업 시간에 포함해 잡으세요. 시작 시각은 첫 방문지에 도착하는 시각이고, 출발지를 고르면 거기서 떠나야 하는 시각을 거꾸로 계산해 보여줍니다. 아직 네이버 값이 없는 구간은 (어림)으로 표시하고 점선으로 그립니다. 사무실을 넣으면 머무는 시간도 건당 작업 시간만큼 잡습니다. 넣고 뺀 내용과 직접 바꾼 순서는 날짜별로 저장됩니다."]];
+let helpOpen=false;
+function openHelp(){helpOpen=true;state.sel=null;openSheet();refresh();const sb=document.getElementById("side");if(sb)sb.scrollTop=0}
+function closeHelp(){if(!helpOpen)return;helpOpen=false;refresh()}
+function drawHelp(box){const c=h("div","card",box);const hd=h("div","chead",c);h("span","clab",hd,"도움말");
+  const xb=h("button","xclose",hd);xb.type="button";xb.setAttribute("aria-label","도움말 닫기");h("span","xi",xb,"✕");h("span",null,xb,"닫기");
+  xb.onclick=e=>{if(e)e.stopPropagation();closeHelp()};
+  HELP.forEach(([t,x])=>{h("div","dn",c,t);x.split(/(?<=\.)\s+/).forEach(p=>h("p","note",c,p))})}
 function drawBody(){
   const s=document.getElementById("side");if(!s)return;
-  const mode=state.sel?"detail":(state.route?"route":"list");
+  const mode=helpOpen?"help":state.sel?"detail":(state.route?"route":"list");
   const keep=bodyMode===mode?bodyScroll:0;                    // 다시 그려도 보던 자리를 지킨다
   s.textContent="";
-  if(state.sel)drawDetail(s,state.sel);else drawList(s);
+  if(helpOpen)drawHelp(s);else if(state.sel)drawDetail(s,state.sel);else drawList(s);
   bodyMode=mode;s.scrollTop=keep}
 // 선택한 고객 1건 — 시트 맨 위 카드(이름·예약일시·주소·모델·증상·메모·전화·길찾기)
 function drawDetail(box,it){
@@ -1332,8 +1359,7 @@ function drawList(s){
       ||(isDay(a.date)&&isDay(b.date)?(dayOrd(a.date)-dayOrd(b.date))             // 예약 날짜 오름차순
         ||((mins(a)==null)-(mins(b)==null))||((mins(a)||0)-(mins(b)||0)):0)       // 같은 날은 방문시간 오름차순(시간 없는 건 뒤)
       ||String(a.name||"").localeCompare(String(b.name||""))};
-  vis.slice().sort(byTime).forEach(i=>cardRow(s,i));
-  h("div","note",s,"바탕 지도는 Esri 기본 지도(밝은/어두운 회색)이고, 경남·부산 시군구 경계를 옅게 깔았습니다. 지도 점 색은 예약된 요일마다 달고(왼쪽 아래 범례), 예약이 아직 없는 건은 흰 점, 완료 건은 회색 점입니다. 점이 서로 가리지 않게 이름표는 감추고 점만 크게 깔았습니다 — 이름표는 지도를 충분히 확대(14단계 이상)하거나 그 점을 고르면 나타납니다. 점을 누르면 아래 시트에 그 고객의 정보 카드가 떠서 전화·길찾기를 할 수 있고, 위쪽 지도에서는 그 점이 이름표와 함께 강조됩니다. `✕ 목록으로`·지도 빈 곳·Esc 키로 닫힙니다. 아래 시트는 맨 위 손잡이를 끌어 높이를 바꾸고(접힘·중간·크게), 손잡이를 한 번 톡 누르면 다음 단계로 넘어갑니다. 목록을 맨 위에서 아래로 당겨도 시트가 내려갑니다. 완료 포함·경로 추천·밤/낮·잠금은 오른쪽 위 ⚙ 메뉴에 있습니다. 예정 건은 시트 `좌표` 탭의 네이버 좌표에 찍고, 좌표를 못 찾은 건과 완료 건은 주소에 적힌 동의 가운데 부근에 찍습니다. 경계는 행정동 기준이라 신정동처럼 여러 행정동으로 나뉜 곳은 그 중간에 표시됩니다. 주소에 동이 적혀 있지 않은 완료 건은 지도에 없고 목록의 '동 확인 필요'에 있습니다. 고객 점을 잇달아 두 번 누르면 두 지점 사이 거리·시간이 ①→②로 이어지고(내 위치 청록 점을 누르면 내 위치에서 그 고객까지), 시트 맨 위 한 줄에서 ✕로 지웁니다. 구간 탭에 네이버 실측이 있으면 그 값, 없으면 직선거리로 어림해 (추정)을 붙입니다.")}
+  vis.slice().sort(byTime).forEach(i=>cardRow(s,i));}
 svg.addEventListener("click",mapTap);
 document.addEventListener("keydown",escClose);
 window.addEventListener("resize",()=>{setHeadH();measureSheet();if(!vbDirty)fitHome();else applyView()});
@@ -1469,8 +1495,7 @@ function drawRoute(s){const R=RT;if(!R)return;const box=h("div","rp",s);
   sec("자리가 없어 못 넣은 미확정 건",R.rest,(a,c)=>h("span","rt",a,c.it.date),addTxt,"넣기",routeIn);
   sec("다른 날 예약",R.other,(a,c)=>h("span","rt",a,c.it.date.replace(/\(.\)/,"")+" "+c.it.time),addTxt,"넣기",routeIn);
   sec("뺀 건",R.outs,(a,c)=>h("span","rt",a,tmin(c.time)!=null?"예약 "+c.time:c.date),()=>"","되돌리기",routeBack);
-  if(R.nopos.length)h("div","rwarn",box,"주소에 동이 없어 경로에 못 넣은 건: "+R.nopos.map(i=>i.name).join(", "));
-  h("div","note",box,"확정 예약은 시간을 그대로 두고, 미확정 건을 이동 시간이 가장 적게 늘어나는 자리에 끼웠습니다. 이동 시간과 경로 선은 네이버 길찾기에서 받은 자동차 기준 값이고, 받은 시점의 교통 상황이 반영되어 있습니다. 주차와 건물 출입 시간은 들어 있지 않으니 건당 작업 시간에 포함해 잡으세요. 시작 시각은 첫 방문지에 도착하는 시각이고, 출발지를 고르면 거기서 떠나야 하는 시각을 거꾸로 계산해 보여줍니다. 아직 네이버 값이 없는 구간은 (어림)으로 표시하고 점선으로 그립니다. 사무실을 넣으면 머무는 시간도 건당 작업 시간만큼 잡습니다. 넣고 뺀 내용과 직접 바꾼 순서는 날짜별로 저장됩니다.")}
+  if(R.nopos.length)h("div","rwarn",box,"주소에 동이 없어 경로에 못 넣은 건: "+R.nopos.map(i=>i.name).join(", "));}
 // ── 자료: 구글 Apps Script(getMapData)가 시트 4개 탭을 읽어 넘겨준다 (10분마다 자동 갱신)
 let liveUp=null,liveDone=null,sheetAt="",sheetState="wait",sheetErr="",loading=false,lastAt=0;
 const LD0={};DONE.forEach(r=>LD0[r[5]]=r[3]);UP.forEach(r=>LD0[r[8]]=r[4]);
@@ -1485,12 +1510,25 @@ function parseUp(v){const out=[];let date="";(v||[]).forEach(r=>{const a=String(
 function parseDone(v){const out=[];const lim=Date.now()-35*864e5;(v||[]).forEach(r=>{const no=String(r[11]||"").trim();const d=String(r[2]||"").match(/^(\d{4})-(\d{2})-(\d{2})/);if(!d||!/^\d{5,}$/.test(no))return;
   if(new Date(+d[1],+d[2]-1,+d[3]).getTime()<lim)return;const addr=String(r[8]||"");
   out.push({k:"done",date:d[2]+"/"+d[3],gu:guOf(r[3],addr),name:String(r[6]||""),model:shortM(r[9]),no,tel:String(r[4]||"").includes("전화"),ld:ldOf(guOf(r[3],addr),addr,no),ph:telOf(r[7])})});return out}
-function setAsof(){const e=document.getElementById("asof");if(!e)return;const live=sheetState==="live";
+function setAsof(){const e=document.getElementById("asof");if(!e)return;const live=sheetState==="live",saved=sheetState==="cache";
+  const hm=ms=>{const w=new Date(ms);return String(w.getMonth()+1)+"/"+w.getDate()+" "+String(w.getHours()).padStart(2,"0")+":"+String(w.getMinutes()).padStart(2,"0")};
   const w=lastAt?new Date(lastAt):null,t=w?String(w.getHours()).padStart(2,"0")+":"+String(w.getMinutes()).padStart(2,"0"):"";
   e.textContent="↻ "+(live?((sheetAt||"최신")+(t?" · "+t:""))
+    :saved?("저장본 "+(cacheAt?hm(cacheAt):"")+(loading?" · 불러오는 중…":" · 연결 안 됨"))
     :sheetState==="wait"?"불러오는 중…":("읽지 못함"+(sheetErr?" · "+sheetErr:"")+(loading?"":" · 눌러 다시 시도")));
-  e.title=live?"눌러서 새로고침 · 시트 "+(sheetAt||"최신")+(t?" "+t+" 갱신":""):"눌러서 다시 시도";
+  e.title=live?"눌러서 새로고침 · 시트 "+(sheetAt||"최신")+(t?" "+t+" 갱신":"")
+    :saved?"인터넷이 안 돼 폰에 저장해 둔 마지막 자료를 보여 줍니다"+(sheetErr?" ("+sheetErr+")":"")+" · 눌러서 다시 시도":"눌러서 다시 시도";
   e.classList.toggle("warn",!live&&sheetState!=="wait")}
+// ── 오프라인 저장본: 마지막으로 받은 시트 자료를 폰에 둬서, 지하주차장처럼 인터넷이 안 될 때도 지도가 비지 않게 ──
+//    PIN이 있을 때만 쓰고, 잠그거나 12시간 자동 잠금이 되면 같이 지운다(pinForget). 다른 지도(API)의 저장본은 쓰지 않는다.
+let cacheAt=0;
+function cacheSave(res){const at=Date.now(),pack=r=>JSON.stringify({api:API,at,res:r});
+  try{localStorage.setItem(DKEY,pack(res));cacheAt=at;return}catch(e){}
+  try{const legs=(res.legs||[]).map((r,i)=>i?r.slice(0,4).concat([""],r.slice(5)):r);        // 자리가 모자라면 길 모양(경로 선)만 빼고 저장
+    localStorage.setItem(DKEY,pack(Object.assign({},res,{legs})));cacheAt=at}catch(e){try{localStorage.removeItem(DKEY)}catch(_){}}}
+function cacheLoad(){if(!PIN)return false;let o=null;try{o=JSON.parse(localStorage.getItem(DKEY)||"null")}catch(e){}
+  if(!o||o.api!==API||!o.res||o.res.ok!==true)return false;
+  takeData(o.res);sheetState="cache";cacheAt=o.at||0;return true}
 function rebuild(){
   const up=(liveUp||UP.map(r=>({k:"up",date:r[0],time:r[1],gu:r[2],name:r[3],ld:r[4],addr:r[5],model:r[6],sym:r[7],no:r[8],ph:"",memo:""}))).map(o=>Object.assign({},o));
   const dn=(liveDone||DONE.map(r=>({k:"done",date:r[0],gu:r[1],name:r[2],ld:r[3],model:r[4],no:r[5],tel:r[6]==="t",ph:""}))).map(o=>Object.assign({},o));
@@ -1529,7 +1567,7 @@ function setLinkMode(on,msg){const g=gEl("gate");if(!g)return;g.classList.remove
   if(gEl("gsub"))gEl("gsub").textContent=on?"받은 연결 코드를 붙여 넣으세요 (원래 지도로: 기본)":"PIN을 입력하면 지도가 열립니다";
   if(gEl("pinok"))gEl("pinok").textContent=on?"연결":"열기";const i=gEl(on?"lnkin":"pinin");if(i){i.value="";try{i.focus()}catch(e){}}}
 function linkSubmit(){const v=(gEl("lnkin").value||"").trim();
-  const go=(pg,api)=>{try{if(pg){localStorage.setItem("asmap.page",pg);localStorage.setItem("asmap.api",api)}else{localStorage.removeItem("asmap.page");localStorage.removeItem("asmap.api")}localStorage.removeItem(PKEY)}catch(e){}
+  const go=(pg,api)=>{try{if(pg){localStorage.setItem("asmap.page",pg);localStorage.setItem("asmap.api",api)}else{localStorage.removeItem("asmap.page");localStorage.removeItem("asmap.api")}localStorage.removeItem(PKEY);localStorage.removeItem(PAT);localStorage.removeItem(DKEY)}catch(e){}
     location.replace(pg?"u-"+pg+".html":"./")};
   if(/^(기본|원래)/.test(v)){go("","");return}
   const m=v.match(/([a-z0-9]{2,16})\s*:\s*(AKfy[\w-]{20,})/);
@@ -1549,7 +1587,7 @@ function gateSubmit(){
     if(!v){gEl("pinerr").textContent="지금 쓰는 PIN을 입력해주세요";return}
     if(!/^\d{4,12}$/.test(n)){gEl("pinerr").textContent="새 PIN은 숫자 4~12자리로 정해주세요";return}
     btn.disabled=true;
-    apiGet("action=setPin&newPin="+encodeURIComponent(n),v).then(res=>{btn.disabled=false;
+    apiCall("setPin",{newPin:n},v).then(res=>{btn.disabled=false;
       if(!res){gEl("pinerr").textContent=NO_SERVER;return}
       if(res.unauthorized){gEl("pinerr").textContent=res.locked?"시도가 많아 잠시 잠겼습니다. 잠시 뒤 다시 해보세요.":"지금 쓰는 PIN이 맞지 않습니다";return}
       if(res.ok!==true){gEl("pinerr").textContent=res.error||"PIN을 바꾸지 못했습니다";return}
@@ -1559,11 +1597,11 @@ function gateSubmit(){
   }
   if(!/^\d{4,12}$/.test(v)){gEl("pinerr").textContent="PIN을 입력해주세요";return}
   btn.disabled=true;
-  apiGet("action=data",v).then(res=>{btn.disabled=false;
+  apiCall("data",null,v).then(res=>{btn.disabled=false;
     if(!res){gEl("pinerr").textContent=NO_SERVER+" · 잠시 뒤 다시 해보세요";return}
     if(res.unauthorized){gEl("pinerr").textContent=res.locked?"시도가 많아 잠시 잠겼습니다. 잠시 뒤 다시 해보세요.":"PIN이 맞지 않습니다";return}
     if(res.ok!==true){gEl("pinerr").textContent=res.error||"시트를 읽지 못했습니다";return}
-    pinSave(v);takeData(res);lastAt=Date.now();hideGate();setAsof();rebuild();fitHome()
+    pinSave(v);takeData(res);cacheSave(res);lastAt=Date.now();hideGate();setAsof();rebuild();fitHome()
   }).catch(()=>{btn.disabled=false;gEl("pinerr").textContent=NO_SERVER+" · 잠시 뒤 다시 해보세요"});
 }
 function takeData(res){
@@ -1575,16 +1613,20 @@ function takeData(res){
 }
 function loadMap(show){
   if(!API){showGate("");setLinkMode(true,"이 폰에 연결된 시트가 없어요");return}
-  if(!PIN){showGate("");return}
-  if(loading)return;loading=true;if(show){sheetState="wait";setAsof()}
-  apiGet("action=data",PIN).then(res=>{
+  if(!PIN||pinExpired()){lockNow("");return}
+  if(loading)return;loading=true;if(show&&sheetState!=="cache"){sheetState="wait"}setAsof();
+  // 실패했을 때: 지금 보이는 자료(방금 받은 것 또는 저장본)가 있으면 그대로 두고 표시만 바꾼다
+  const fail=msg=>{if(sheetState==="live"||sheetState==="cache"||liveUp){sheetState="cache";sheetErr=msg}else{sheetState="err";sheetErr=msg}setAsof();rebuild()};
+  apiCall("data",null,PIN).then(res=>{
     loading=false;lastAt=Date.now();
-    if(!res){sheetState="err";sheetErr="응답 형식 오류";setAsof();rebuild();return}
-    if(res.unauthorized){pinForget();sheetState="wait";setAsof();rebuild();showGate(res.locked?"시도가 많아 잠시 잠겼습니다. 잠시 뒤 다시 해보세요.":"");return}
-    if(res.ok!==true){sheetState="err";sheetErr=res.error||"알 수 없는 오류";setAsof();rebuild();return}
-    takeData(res);setAsof();rebuild()
-  }).catch(()=>{loading=false;if(sheetState!=="live"){sheetState="err";sheetErr="서버에 연결하지 못했습니다"}setAsof();rebuild()})
+    if(!res){fail("응답 형식 오류");return}
+    if(res.unauthorized){lockNow(res.locked?"시도가 많아 잠시 잠겼습니다. 잠시 뒤 다시 해보세요.":"");return}
+    if(res.ok!==true){fail(res.error||"알 수 없는 오류");return}
+    takeData(res);cacheSave(res);pinTouch();setAsof();rebuild()
+  }).catch(()=>{loading=false;fail("서버에 연결하지 못했습니다")})
 }
+// 잠그기: PIN·저장본을 지우고, 화면의 고객 자료도 비운 뒤 PIN 화면을 띄운다
+function lockNow(msg){pinForget();liveUp=null;liveDone=null;GEOX={};LEGS={};PLACE={};cacheAt=0;sheetState="wait";setAsof();rebuild();showGate(msg||"")}
 document.getElementById("asof").addEventListener("click",()=>loadMap(true));
 document.getElementById("gearbtn").addEventListener("click",e=>{e.stopPropagation();menuOpen()?closeMenu():openMenu()});
 {const sh=sheadEl();if(sh){sh.addEventListener("pointerdown",sheetDown);sh.addEventListener("pointermove",sheetMove);
@@ -1605,7 +1647,9 @@ document.getElementById("pincancel").addEventListener("click",()=>{if(!API)retur
 document.getElementById("lnkbtn").addEventListener("click",()=>setLinkMode(true));
 document.getElementById("lnkin").addEventListener("keydown",e=>{if(e.key==="Enter")gateSubmit()});
 setInterval(()=>{if(PIN&&!document.hidden)loadMap(false)},600000);
-document.addEventListener("visibilitychange",()=>{if(!document.hidden&&PIN&&Date.now()-lastAt>180000)loadMap(false)});
+document.addEventListener("visibilitychange",()=>{if(document.hidden||!PIN)return;
+  if(pinExpired()){lockNow("오래 쓰지 않아 잠겼습니다. PIN을 다시 넣어 주세요.");return}   // 12시간 넘게 안 열었으면 잠근다
+  pinTouch();if(Date.now()-lastAt>180000)loadMap(false)});
 if(navigator.serviceWorker&&location.protocol==="https:"){try{navigator.serviceWorker.register("sw.js").catch(()=>{})}catch(e){}}
 themeInit();pinLoad();setHeadH();measureSheet();snapTo("mid",true);rebuild();fitHome();drawMenu();syncChrome();
 // 웹폰트가 늦게 와도 캡슐 라벨 폭이 어긋나지 않게 한 번 다시 잰다
@@ -1613,7 +1657,7 @@ try{if(document.fonts&&document.fonts.ready&&document.fonts.ready.then)document.
   items.forEach(it=>{if(!it.t)return;try{it.t.setAttribute("font-size","12");
     const w=it.t.getComputedTextLength&&it.t.getComputedTextLength();
     if(typeof w==="number"&&isFinite(w)&&w>0)it.lw=w}catch(e){}});applyView()})}catch(e){}
-if(!API){showGate("");setLinkMode(true,"이 폰에 연결된 시트가 없어요")}else if(PIN){hideGate();loadMap(true)}else{showGate("")}
+if(!API){showGate("");setLinkMode(true,"이 폰에 연결된 시트가 없어요")}else if(PIN){hideGate();if(cacheLoad()){rebuild();fitHome()}pinTouch();loadMap(true)}else{showGate("")}
 meAuto();
 </script>
 </body>
