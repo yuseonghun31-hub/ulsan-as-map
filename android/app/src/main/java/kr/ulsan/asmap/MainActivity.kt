@@ -72,7 +72,8 @@ class MainActivity : Activity() {
     }
 
     private fun isOurSite(uri: Uri?): Boolean =
-        uri != null && uri.scheme == "https" && uri.host == SITE_HOST && (uri.path ?: "").startsWith(SITE_PATH)
+        uri != null && uri.scheme == "https" && uri.host == SITE_HOST &&
+            (uri.path ?: "").let { it == SITE_PATH || it.startsWith("$SITE_PATH/") }   // '/ulsan-as-map2' 같은 다른 저장소는 제외
 
     /** 지도앱 자바스크립트에서 부르는 다리: window.AsBridge.openApp("com.ceragem.as.android") */
     inner class Bridge {
