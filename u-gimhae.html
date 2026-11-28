@@ -1357,7 +1357,7 @@ function saveRS(){rsAt=Date.now();const o={set:RS.set,days:RS.days,at:rsAt};try{
 const tmin=s=>{const m=String(s||"").match(/^(\d{1,2}):(\d{2})$/);return m?+m[1]*60+ +m[2]:null};
 const hhmm=t=>String(Math.floor(t/60)).padStart(2,"0")+":"+String(Math.round(t%60)).padStart(2,"0");
 const isDay=d=>/^\d+\/\d+/.test(d||"");
-const dayNum=d=>{const m=d.match(/^(\d+)\/(\d+)/);return +m[1]*100+ +m[2]};
+const dayNum=d=>{const m=String(d||"").match(/^(\d+)\/(\d+)/);if(!m)return 9e15;/* 해를 넘겨도(12/30 → 1/2) 순서가 맞게, 오늘에서 가장 가까운 해의 날짜로 센다 */const now=Date.now(),y=new Date().getFullYear();let best=9e15;[y-1,y,y+1].forEach(t=>{const v=new Date(t,+m[1]-1,+m[2]).getTime();if(!isNaN(v)&&Math.abs(v-now)<Math.abs(best-now))best=v});return best};
 const planOf=d=>{const p=RS.days[d]||{};return{out:Array.isArray(p.out)?p.out.slice():[],in:Array.isArray(p.in)?p.in.slice():[],ord:Array.isArray(p.ord)&&p.ord.length?p.ord.slice():null}};
 function legMin(a,b){const L=realLeg(a,b);if(L)return L.min;const d=(p,q)=>Math.hypot(p[0]-q[0],p[1]-q[1]),mn=u=>u*KM*DETOUR/SPEED*60;const ae=a.gu==="동구",be=b.gu==="동구";let t;
   if(ae===be)t=mn(d(a.pos,b.pos));
